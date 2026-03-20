@@ -6,567 +6,181 @@
   <title>🦁 Lion Match</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: none; }
     body {
       font-family: 'Nunito', 'Segoe UI', sans-serif;
       background: #0d0630;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      overflow-x: hidden;
-      position: relative;
+      display: flex; flex-direction: column; align-items: center;
+      overflow-x: hidden; position: relative; user-select: none;
     }
-
-    /* ── ANIMATED BACKGROUND ── */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background:
         radial-gradient(ellipse at 20% 20%, rgba(138,43,226,0.3) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 80%, rgba(30,144,255,0.25) 0%, transparent 50%),
         radial-gradient(ellipse at 50% 50%, rgba(255,165,0,0.1) 0%, transparent 60%);
-      animation: bgPulse 8s ease-in-out infinite alternate;
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
-    @keyframes bgPulse {
-      from { opacity: 0.8; }
-      to { opacity: 1; }
-    }
+    .stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .star { position: absolute; border-radius: 50%; background: #fff; animation: twinkle linear infinite; }
+    @keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.5)} 50%{opacity:1;transform:scale(1)} }
 
-    /* Stars */
-    .stars {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .star {
-      position: absolute;
-      border-radius: 50%;
-      background: #fff;
-      animation: twinkle linear infinite;
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: 1; transform: scale(1); }
-    }
-
-    .screen {
-      display: none;
-      width: 100%;
-      max-width: 420px;
-      padding: 12px;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-    }
+    .screen { display: none; width: 100%; max-width: 440px; padding: 10px; flex-direction: column; align-items: center; position: relative; z-index: 1; min-height: 100vh; }
     .screen.active { display: flex; }
 
-    /* ── MENU ── */
-    .menu-top {
-      width: 100%;
-      text-align: center;
-      padding: 20px 0 8px;
-    }
-    .lion-castle {
-      font-size: 100px;
-      filter: drop-shadow(0 8px 24px rgba(255,200,0,0.6));
-      animation: lionFloat 3s ease-in-out infinite;
-      display: block;
-      margin: 0 auto;
-    }
-    @keyframes lionFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
-    }
+    /* MENU */
+    .lion-logo { font-size: 90px; filter: drop-shadow(0 8px 24px rgba(255,200,0,0.6)); animation: lionFloat 3s ease-in-out infinite; display: block; margin: 16px auto 4px; }
+    @keyframes lionFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .game-title { font-size: 42px; font-weight: 900; color: #FFE066; text-shadow: 0 2px 0 #B8860B, 0 4px 0 #8B6914, 0 0 30px rgba(255,220,0,0.5); letter-spacing: 2px; text-align: center; }
+    .game-subtitle { font-size: 14px; color: #c9b3ff; text-align: center; margin-top: 4px; }
+    .menu-card { background: linear-gradient(160deg,#3a2278,#1e1060); border: 2px solid rgba(150,100,255,0.35); border-radius: 28px; padding: 24px 20px 28px; width: 100%; margin-top: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); }
+    .lives-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 18px; }
+    .heart { font-size: 22px; }
+    .heart.empty { filter: grayscale(1) opacity(0.35); }
+    .btn { border: none; border-radius: 50px; font-family: 'Nunito',sans-serif; font-weight: 900; cursor: pointer; width: 100%; margin-bottom: 12px; transition: transform 0.1s, box-shadow 0.1s; position: relative; overflow: hidden; }
+    .btn::after { content:''; position:absolute; top:0;left:0;right:0; height:45%; background:rgba(255,255,255,0.15); border-radius:50px 50px 0 0; pointer-events:none; }
+    .btn:active { transform: translateY(3px) scale(0.98); }
+    .btn-play { background: linear-gradient(180deg,#FFE566,#FFA500,#FF8C00); color:#3a1a00; font-size:24px; padding:17px; letter-spacing:3px; box-shadow:0 6px 0 #cc6600,0 8px 20px rgba(255,140,0,0.4); }
+    .btn-play:active { box-shadow:0 2px 0 #cc6600; }
+    .btn-shop { background:linear-gradient(180deg,#a78bfa,#7c3aed); color:#fff; font-size:16px; padding:13px; box-shadow:0 5px 0 #5b21b6; }
+    .btn-shop:active { box-shadow:0 1px 0 #5b21b6; }
+    .btn-lb { background:linear-gradient(180deg,#60a5fa,#2563eb); color:#fff; font-size:14px; padding:11px; box-shadow:0 4px 0 #1d4ed8; }
+    .btn-lb:active { box-shadow:0 1px 0 #1d4ed8; }
+    .version-text { font-size:11px; color:#6b5f8c; text-align:center; margin-top:4px; }
 
-    .game-title {
-      font-size: 44px;
-      font-weight: 900;
-      color: #FFE066;
-      text-shadow:
-        0 2px 0 #B8860B,
-        0 4px 0 #8B6914,
-        0 0 30px rgba(255,220,0,0.6),
-        0 0 60px rgba(255,180,0,0.3);
-      letter-spacing: 2px;
-      margin-top: 8px;
-    }
-    .game-subtitle {
-      font-size: 15px;
-      color: #c9b3ff;
-      margin-top: 4px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    }
+    /* GAME */
+    #game-screen { padding: 6px; justify-content: flex-start; }
+    .hud { display:flex; justify-content:space-between; align-items:center; width:100%; max-width:440px; padding:6px 8px 2px; }
+    .hud-pill { background:linear-gradient(160deg,#2d1b69,#1a0a4e); border:1.5px solid rgba(150,100,255,0.3); border-radius:16px; padding:7px 14px; text-align:center; min-width:88px; box-shadow:0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.07); }
+    .hud-label { font-size:9px; color:#9d87d0; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; }
+    .hud-value { font-size:22px; font-weight:900; color:#FFE566; line-height:1.1; text-shadow:0 0 10px rgba(255,220,0,0.4); }
+    .hud-value.danger { color:#ff6b6b; animation:pulse 0.8s ease infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+    .hud-lion-btn { background:none; border:none; cursor:pointer; font-size:44px; filter:drop-shadow(0 4px 12px rgba(255,200,0,0.5)); transition:transform 0.2s; }
+    .hud-lion-btn:hover { transform:scale(1.1) rotate(-5deg); }
 
-    .menu-card {
-      background: linear-gradient(160deg, #3a2278 0%, #1e1060 100%);
-      border: 2px solid rgba(150,100,255,0.4);
-      border-radius: 28px;
-      padding: 24px 20px 28px;
-      width: 100%;
-      margin-top: 16px;
-      box-shadow:
-        0 20px 60px rgba(0,0,0,0.6),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-    }
+    /* BOARD */
+    .board-outer { background:linear-gradient(135deg,#1a0a5e,#0d0630); border:2px solid rgba(120,80,255,0.4); border-radius:20px; padding:7px; box-shadow:0 0 0 1px rgba(180,120,255,0.15), 0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08); margin:4px auto; position:relative; }
+    .board { display:grid; gap:5px; cursor:default; position:relative; }
 
-    /* Lives bar */
-    .lives-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin-bottom: 20px;
-    }
-    .heart { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(255,50,50,0.5)); }
-    .heart.empty { filter: grayscale(1) opacity(0.4); }
-
-    .btn {
-      border: none;
-      border-radius: 50px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 900;
-      cursor: pointer;
-      width: 100%;
-      margin-bottom: 12px;
-      transition: transform 0.12s, filter 0.12s;
-      position: relative;
-      overflow: hidden;
-    }
-    .btn::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 50%;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50px 50px 0 0;
-      pointer-events: none;
-    }
-    .btn:active { transform: scale(0.96); filter: brightness(0.9); }
-
-    .btn-play {
-      background: linear-gradient(180deg, #FFE566 0%, #FFA500 50%, #FF8C00 100%);
-      color: #3a1a00;
-      font-size: 24px;
-      padding: 18px;
-      letter-spacing: 3px;
-      box-shadow: 0 6px 0 #cc6600, 0 8px 20px rgba(255,140,0,0.4);
-      border-bottom: 3px solid #cc6600;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
-    }
-    .btn-play:active { transform: translateY(3px) scale(0.98); box-shadow: 0 3px 0 #cc6600; }
-
-    .btn-shop {
-      background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
-      color: #fff;
-      font-size: 17px;
-      padding: 14px;
-      box-shadow: 0 5px 0 #5b21b6, 0 6px 16px rgba(124,58,237,0.4);
-      border-bottom: 3px solid #5b21b6;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.3);
-    }
-    .btn-shop:active { transform: translateY(3px) scale(0.98); box-shadow: 0 2px 0 #5b21b6; }
-
-    .btn-lb {
-      background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
-      color: #fff;
-      font-size: 15px;
-      padding: 12px;
-      box-shadow: 0 4px 0 #1d4ed8, 0 5px 14px rgba(37,99,235,0.3);
-      border-bottom: 3px solid #1d4ed8;
-    }
-    .btn-lb:active { transform: translateY(3px) scale(0.98); box-shadow: 0 1px 0 #1d4ed8; }
-
-    .version-text { font-size: 11px; color: #6b5f8c; text-align: center; margin-top: 4px; }
-
-    /* ── GAME SCREEN ── */
-    #game-screen { padding: 8px; justify-content: flex-start; }
-
-    .hud {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      max-width: 420px;
-      padding: 8px 8px 4px;
-    }
-
-    .hud-pill {
-      background: linear-gradient(160deg, #2d1b69, #1a0a4e);
-      border: 1.5px solid rgba(150,100,255,0.3);
-      border-radius: 16px;
-      padding: 8px 16px;
-      text-align: center;
-      min-width: 90px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07);
-    }
-    .hud-label {
-      font-size: 9px;
-      color: #9d87d0;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-    .hud-value {
-      font-size: 24px;
-      font-weight: 900;
-      color: #FFE566;
-      line-height: 1.1;
-      text-shadow: 0 0 10px rgba(255,220,0,0.4);
-    }
-    .hud-value.danger { color: #ff6b6b; text-shadow: 0 0 10px rgba(255,80,80,0.5); animation: pulse 0.8s ease infinite; }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-    .hud-lion-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 48px;
-      filter: drop-shadow(0 4px 12px rgba(255,200,0,0.5));
-      transition: transform 0.2s;
-    }
-    .hud-lion-btn:hover { transform: scale(1.1) rotate(-5deg); }
-
-    /* ── BOARD ── */
-    .board-outer {
-      background: linear-gradient(135deg, #1a0a5e 0%, #0d0630 100%);
-      border: 2px solid rgba(120,80,255,0.4);
-      border-radius: 20px;
-      padding: 8px;
-      box-shadow:
-        0 0 0 1px rgba(180,120,255,0.15),
-        0 20px 60px rgba(0,0,0,0.7),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-      margin: 4px auto;
-    }
-    .board {
-      display: grid;
-      gap: 4px;
-    }
-
+    /* TILE */
     .tile {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      cursor: grab;
       position: relative;
-      transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.12s;
-      user-select: none;
-      border: none;
-      outline: none;
-    }
-    .tile::before {
-      content: '';
-      position: absolute;
-      top: 2px; left: 4px; right: 4px;
-      height: 40%;
-      background: rgba(255,255,255,0.25);
-      border-radius: 8px 8px 50% 50%;
-      pointer-events: none;
-    }
-    .tile::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      border: 1.5px solid rgba(255,255,255,0.2);
-      pointer-events: none;
-    }
-    .tile:hover { transform: scale(1.08); }
-    .tile.selected {
-      transform: scale(1.15) translateY(-3px);
-      box-shadow: 0 0 0 3px #FFE566, 0 0 20px rgba(255,230,0,0.6), 0 8px 16px rgba(0,0,0,0.5);
-      z-index: 2;
-      animation: selectedBob 0.4s ease;
-    }
-    @keyframes selectedBob {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.2) translateY(-5px); }
-      100% { transform: scale(1.15) translateY(-3px); }
-    }
-    .tile.exploding { animation: tileExplode 0.3s ease-out forwards; }
-    @keyframes tileExplode {
-      0% { transform: scale(1.2); opacity: 1; }
-      50% { transform: scale(1.5); opacity: 0.7; }
-      100% { transform: scale(0); opacity: 0; }
-    }
-    .tile.falling { animation: tileFall 0.25s cubic-bezier(0.34,1.56,0.64,1); }
-    @keyframes tileFall {
-      from { transform: translateY(-30px) scale(0.8); opacity: 0.5; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
-    .tile.invalid { animation: tileShake 0.3s ease; }
-    @keyframes tileShake {
-      0%,100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      75% { transform: translateX(4px); }
-    }
-
-    /* Gem colors with gradients */
-    .gem-ruby     { background: linear-gradient(145deg, #ff6b8a, #e5173f, #a00020); box-shadow: 0 4px 12px rgba(220,30,60,0.5); }
-    .gem-sapphire { background: linear-gradient(145deg, #60a5fa, #1d6ff0, #1040b0); box-shadow: 0 4px 12px rgba(30,100,240,0.5); }
-    .gem-emerald  { background: linear-gradient(145deg, #6ee7b7, #10b981, #047857); box-shadow: 0 4px 12px rgba(20,170,110,0.5); }
-    .gem-topaz    { background: linear-gradient(145deg, #fde68a, #f59e0b, #b45309); box-shadow: 0 4px 12px rgba(240,160,20,0.5); }
-    .gem-amethyst { background: linear-gradient(145deg, #c084fc, #9333ea, #6b21a8); box-shadow: 0 4px 12px rgba(150,50,230,0.5); }
-    .gem-diamond  { background: linear-gradient(145deg, #f0f9ff, #bae6fd, #7dd3fc); box-shadow: 0 4px 12px rgba(150,210,255,0.5); }
-
-    /* ── BOTTOM BAR ── */
-    .bottom-bar {
-      margin-top: 10px;
-      text-align: center;
-      width: 100%;
-      max-width: 420px;
-      padding: 0 12px;
-    }
-    .hint-text {
-      color: #c4b5fd;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    }
-    .coins-bar {
-      display: inline-block;
-      background: linear-gradient(135deg, #3b2070, #1e1060);
-      border: 1.5px solid rgba(255,200,0,0.3);
-      border-radius: 20px;
-      padding: 6px 18px;
-      color: #FFE566;
-      font-size: 16px;
-      font-weight: 900;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-
-    /* ── GAME OVER OVERLAY ── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(5,2,20,0.85);
-      backdrop-filter: blur(6px);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-    .overlay.show { display: flex; }
-
-    .result-card {
-      background: linear-gradient(160deg, #3a2278 0%, #1a0a5e 100%);
-      border: 2px solid rgba(160,120,255,0.5);
-      border-radius: 28px;
-      padding: 32px 24px;
-      width: 90%;
-      max-width: 360px;
-      text-align: center;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
-      animation: cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    @keyframes cardPop {
-      from { transform: scale(0.6) translateY(60px); opacity: 0; }
-      to { transform: scale(1) translateY(0); opacity: 1; }
-    }
-
-    .result-emoji { font-size: 70px; display: block; margin-bottom: 8px; animation: resultBounce 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
-    @keyframes resultBounce {
-      from { transform: scale(0) rotate(-20deg); }
-      to { transform: scale(1) rotate(0deg); }
-    }
-    .result-title { font-size: 30px; font-weight: 900; color: #FFE566; margin-bottom: 4px; text-shadow: 0 2px 10px rgba(255,200,0,0.4); }
-    .result-score { font-size: 18px; color: #c4b5fd; margin-bottom: 20px; }
-    .result-stars { font-size: 42px; margin-bottom: 16px; letter-spacing: 4px; }
-
-    .btn-result-main {
-      background: linear-gradient(180deg, #FFE566, #FFA500, #FF8C00);
-      color: #3a1a00;
-      font-size: 19px;
-      padding: 15px;
-      margin-bottom: 10px;
-      box-shadow: 0 5px 0 #cc6600, 0 6px 16px rgba(255,140,0,0.3);
-    }
-    .btn-result-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #cc6600; }
-    .btn-result-alt {
-      background: linear-gradient(180deg, #a78bfa, #7c3aed);
-      color: #fff;
-      font-size: 15px;
-      padding: 13px;
-      box-shadow: 0 4px 0 #5b21b6;
-    }
-
-    /* ── SHOP ── */
-    .page-header {
-      text-align: center;
-      padding: 20px 0 12px;
-      width: 100%;
-    }
-    .page-title {
-      font-size: 32px;
-      font-weight: 900;
-      color: #FFE566;
-      text-shadow: 0 2px 0 #B8860B, 0 0 20px rgba(255,200,0,0.4);
-    }
-    .page-subtitle { font-size: 15px; color: #c4b5fd; margin-top: 4px; }
-
-    .shop-grid {
-      display: grid;
-      gap: 10px;
-      width: 100%;
-      margin-top: 8px;
-    }
-
-    .shop-item {
-      background: linear-gradient(135deg, #2d1b69, #1e1060);
-      border: 1.5px solid rgba(150,100,255,0.25);
-      border-radius: 16px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: transform 0.12s, box-shadow 0.12s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      position: relative;
-      overflow: hidden;
-    }
-    .shop-item::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-    }
-    .shop-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
-    .shop-item:active { transform: scale(0.97); }
-
-    .shop-icon { font-size: 36px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); flex-shrink: 0; }
-    .shop-info { flex: 1; }
-    .shop-name { font-size: 16px; font-weight: 800; color: #fff; }
-    .shop-desc { font-size: 12px; color: #9d87d0; margin-top: 2px; }
-    .shop-price {
-      background: linear-gradient(180deg, #FFE566, #FFA500);
-      color: #3a1a00;
-      font-size: 14px;
-      font-weight: 900;
-      padding: 6px 14px;
-      border-radius: 20px;
-      box-shadow: 0 2px 6px rgba(255,140,0,0.4);
-      white-space: nowrap;
+      transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.12s, filter 0.1s;
+      border: none; outline: none;
       flex-shrink: 0;
     }
-    .badge {
-      position: absolute;
-      top: -1px; right: -1px;
-      background: linear-gradient(135deg, #ff6b6b, #ee0979);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 900;
-      padding: 3px 10px;
-      border-radius: 0 16px 0 12px;
-      letter-spacing: 0.5px;
-    }
+    .tile::before { content:''; position:absolute; top:3px; left:5px; right:5px; height:38%; background:rgba(255,255,255,0.22); border-radius:9px 9px 50% 50%; pointer-events:none; }
+    .tile::after { content:''; position:absolute; inset:0; border-radius:14px; border:1.5px solid rgba(255,255,255,0.18); pointer-events:none; }
+    .tile:hover:not(.processing) { transform:scale(1.06); z-index:2; }
+    .tile.dragging { transform:scale(1.2) !important; z-index:10 !important; opacity:0.85; cursor:grabbing; box-shadow:0 12px 30px rgba(0,0,0,0.7) !important; }
+    .tile.drag-target { transform:scale(1.08); box-shadow:0 0 0 3px rgba(255,255,255,0.7) !important; }
+    .tile.selected { transform:scale(1.12) translateY(-3px); z-index:2; animation:selectedBob 0.35s ease; }
+    @keyframes selectedBob { 0%{transform:scale(1)} 60%{transform:scale(1.18) translateY(-5px)} 100%{transform:scale(1.12) translateY(-3px)} }
+    .tile.exploding { animation:tileExplode 0.28s ease-out forwards !important; }
+    @keyframes tileExplode { 0%{transform:scale(1.15);opacity:1} 40%{transform:scale(1.4);opacity:0.8} 100%{transform:scale(0);opacity:0} }
+    .tile.falling { animation:tileFall 0.28s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes tileFall { from{transform:translateY(-32px) scale(0.75);opacity:0.4} to{transform:translateY(0) scale(1);opacity:1} }
+    .tile.invalid { animation:tileShake 0.3s ease; }
+    @keyframes tileShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
 
-    .btn-back {
-      background: transparent;
-      border: 1.5px solid rgba(150,100,255,0.3);
-      color: #9d87d0;
-      font-size: 15px;
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 50px;
-      font-family: 'Nunito', sans-serif;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.2s;
-    }
-    .btn-back:hover { background: rgba(150,100,255,0.1); color: #c4b5fd; }
+    /* GEM COLORS */
+    .gem-ruby     { background:linear-gradient(145deg,#ff7096,#e5173f,#900020); box-shadow:0 5px 14px rgba(220,30,60,0.55); }
+    .gem-sapphire { background:linear-gradient(145deg,#60a5fa,#1d6ff0,#0e3fa0); box-shadow:0 5px 14px rgba(30,100,240,0.55); }
+    .gem-emerald  { background:linear-gradient(145deg,#6ee7b7,#10b981,#047857); box-shadow:0 5px 14px rgba(20,170,110,0.55); }
+    .gem-topaz    { background:linear-gradient(145deg,#fde68a,#f59e0b,#b45309); box-shadow:0 5px 14px rgba(240,160,20,0.55); }
+    .gem-amethyst { background:linear-gradient(145deg,#c084fc,#9333ea,#6b21a8); box-shadow:0 5px 14px rgba(150,50,230,0.55); }
+    .gem-diamond  { background:linear-gradient(145deg,#e0f2fe,#bae6fd,#7dd3fc); box-shadow:0 5px 14px rgba(130,200,255,0.55); }
 
-    /* ── LEADERBOARD ── */
-    .lb-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-    .lb-row {
-      background: linear-gradient(135deg, #2d1b69, #1e1060);
-      border: 1.5px solid rgba(150,100,255,0.2);
-      border-radius: 14px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-    }
-    .lb-row.you {
-      border-color: rgba(255,220,0,0.4);
-      background: linear-gradient(135deg, #3d2a00, #2a1a00);
-      box-shadow: 0 3px 12px rgba(255,200,0,0.2);
-    }
-    .lb-rank { font-size: 22px; min-width: 40px; text-align: center; }
-    .lb-name { flex: 1; font-size: 15px; font-weight: 800; color: #fff; }
-    .lb-score { font-size: 15px; font-weight: 900; color: #FFE566; }
+    /* POWER-UP TILES */
+    .gem-rocket-h { background:linear-gradient(145deg,#ffd700,#ff8c00,#cc4400); box-shadow:0 5px 18px rgba(255,140,0,0.7); }
+    .gem-rocket-v { background:linear-gradient(145deg,#ffd700,#ff8c00,#cc4400); box-shadow:0 5px 18px rgba(255,140,0,0.7); }
+    .gem-tnt      { background:linear-gradient(145deg,#ff4500,#cc0000,#800000); box-shadow:0 5px 18px rgba(255,60,0,0.7); }
+    .gem-lightball{ background:linear-gradient(145deg,#ffffff,#e0d0ff,#9333ea); box-shadow:0 5px 18px rgba(200,150,255,0.8); animation:lightballPulse 1.5s ease-in-out infinite; }
+    @keyframes lightballPulse { 0%,100%{box-shadow:0 5px 18px rgba(200,150,255,0.8)} 50%{box-shadow:0 5px 28px rgba(200,150,255,1),0 0 40px rgba(200,150,255,0.6)} }
 
-    /* ── CONFETTI ── */
-    .confetti-piece {
-      position: fixed;
-      border-radius: 3px;
-      animation: confettiFall linear forwards;
-      pointer-events: none;
-      z-index: 200;
-    }
-    @keyframes confettiFall {
-      0% { transform: translateY(-20px) rotate(0deg) scaleX(1); opacity: 1; }
-      50% { scaleX(-1); }
-      100% { transform: translateY(110vh) rotate(720deg) scaleX(-1); opacity: 0; }
-    }
+    /* POWER-UP OVERLAY LABEL */
+    .tile .pu-label { position:absolute; font-size:11px; font-weight:900; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.8); bottom:2px; right:4px; line-height:1; pointer-events:none; z-index:3; }
 
-    /* ── SCORE POPUP ── */
-    .score-popup {
-      position: fixed;
-      pointer-events: none;
-      font-size: 24px;
-      font-weight: 900;
-      color: #FFE566;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-      animation: scoreFloat 0.8s ease-out forwards;
-      z-index: 50;
-      font-family: 'Nunito', sans-serif;
-    }
-    @keyframes scoreFloat {
-      0% { transform: translateY(0) scale(0.5); opacity: 1; }
-      100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
-    }
+    /* BOTTOM BAR */
+    .bottom-bar { margin-top:8px; text-align:center; width:100%; max-width:440px; padding:0 10px; }
+    .hint-text { color:#c4b5fd; font-size:13px; font-weight:700; margin-bottom:5px; }
+    .coins-bar { display:inline-block; background:linear-gradient(135deg,#3b2070,#1e1060); border:1.5px solid rgba(255,200,0,0.3); border-radius:20px; padding:5px 16px; color:#FFE566; font-size:15px; font-weight:900; }
 
-    @media (max-width: 380px) {
-      .tile { width: 38px; height: 38px; font-size: 17px; }
-      .game-title { font-size: 36px; }
-    }
-    @media (max-width: 340px) {
-      .tile { width: 34px; height: 34px; font-size: 15px; }
-    }
+    /* POWER-UP BUTTONS */
+    .booster-row { display:flex; gap:8px; justify-content:center; margin-top:8px; }
+    .booster-btn { background:linear-gradient(160deg,#2d1b69,#1a0a4e); border:1.5px solid rgba(150,100,255,0.4); border-radius:14px; padding:8px 14px; cursor:pointer; font-size:22px; display:flex; flex-direction:column; align-items:center; color:#c4b5fd; font-size:10px; font-weight:800; gap:2px; transition:transform 0.12s,box-shadow 0.12s; box-shadow:0 4px 12px rgba(0,0,0,0.4); }
+    .booster-btn span { font-size:24px; }
+    .booster-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.5); }
+    .booster-btn:active { transform:scale(0.95); }
+    .booster-btn.active-mode { border-color:#FFE566; box-shadow:0 0 12px rgba(255,220,0,0.5); }
+
+    /* OVERLAY */
+    .overlay { position:fixed; inset:0; background:rgba(5,2,20,0.85); backdrop-filter:blur(6px); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
+    .overlay.show { display:flex; }
+    .result-card { background:linear-gradient(160deg,#3a2278,#1a0a5e); border:2px solid rgba(160,120,255,0.5); border-radius:28px; padding:28px 22px; width:90%; max-width:360px; text-align:center; box-shadow:0 30px 80px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.1); animation:cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes cardPop { from{transform:scale(0.6) translateY(60px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+    .result-emoji { font-size:68px; display:block; margin-bottom:6px; animation:resultBounce 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+    @keyframes resultBounce { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0deg)} }
+    .result-stars { font-size:40px; margin-bottom:10px; letter-spacing:4px; }
+    .result-title { font-size:28px; font-weight:900; color:#FFE566; margin-bottom:4px; text-shadow:0 2px 10px rgba(255,200,0,0.4); }
+    .result-score { font-size:17px; color:#c4b5fd; margin-bottom:18px; }
+    .btn-result-main { background:linear-gradient(180deg,#FFE566,#FFA500,#FF8C00); color:#3a1a00; font-size:18px; padding:14px; margin-bottom:10px; box-shadow:0 5px 0 #cc6600; }
+    .btn-result-main:active { box-shadow:0 1px 0 #cc6600; }
+    .btn-result-alt { background:linear-gradient(180deg,#a78bfa,#7c3aed); color:#fff; font-size:14px; padding:12px; box-shadow:0 4px 0 #5b21b6; }
+
+    /* SHOP */
+    .page-header { text-align:center; padding:18px 0 10px; width:100%; }
+    .page-title { font-size:30px; font-weight:900; color:#FFE566; text-shadow:0 2px 0 #B8860B,0 0 20px rgba(255,200,0,0.4); }
+    .page-subtitle { font-size:14px; color:#c4b5fd; margin-top:3px; }
+    .shop-grid { display:grid; gap:9px; width:100%; margin-top:6px; }
+    .shop-item { background:linear-gradient(135deg,#2d1b69,#1e1060); border:1.5px solid rgba(150,100,255,0.25); border-radius:16px; padding:13px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:transform 0.12s,box-shadow 0.12s; box-shadow:0 4px 12px rgba(0,0,0,0.4); position:relative; overflow:hidden; }
+    .shop-item:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.5); }
+    .shop-item:active { transform:scale(0.97); }
+    .shop-icon { font-size:34px; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.4)); flex-shrink:0; }
+    .shop-info { flex:1; }
+    .shop-name { font-size:15px; font-weight:800; color:#fff; }
+    .shop-desc { font-size:11px; color:#9d87d0; margin-top:2px; }
+    .shop-price { background:linear-gradient(180deg,#FFE566,#FFA500); color:#3a1a00; font-size:13px; font-weight:900; padding:5px 12px; border-radius:20px; box-shadow:0 2px 6px rgba(255,140,0,0.4); white-space:nowrap; flex-shrink:0; }
+    .badge { position:absolute; top:0; right:0; background:linear-gradient(135deg,#ff6b6b,#ee0979); color:#fff; font-size:9px; font-weight:900; padding:3px 10px; border-radius:0 16px 0 12px; letter-spacing:0.5px; }
+    .btn-back { background:transparent; border:1.5px solid rgba(150,100,255,0.3); color:#9d87d0; font-size:14px; padding:11px; margin-top:10px; border-radius:50px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer; width:100%; transition:all 0.2s; }
+    .btn-back:hover { background:rgba(150,100,255,0.1); color:#c4b5fd; }
+
+    /* LEADERBOARD */
+    .lb-list { width:100%; display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .lb-row { background:linear-gradient(135deg,#2d1b69,#1e1060); border:1.5px solid rgba(150,100,255,0.2); border-radius:14px; padding:11px 15px; display:flex; align-items:center; gap:12px; }
+    .lb-row.you { border-color:rgba(255,220,0,0.4); background:linear-gradient(135deg,#3d2a00,#2a1a00); }
+    .lb-rank { font-size:22px; min-width:36px; text-align:center; }
+    .lb-name { flex:1; font-size:14px; font-weight:800; color:#fff; }
+    .lb-score { font-size:14px; font-weight:900; color:#FFE566; }
+
+    /* EFFECTS */
+    .confetti-piece { position:fixed; border-radius:3px; animation:confettiFall linear forwards; pointer-events:none; z-index:200; }
+    @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+    .score-popup { position:fixed; pointer-events:none; font-size:22px; font-weight:900; color:#FFE566; text-shadow:0 2px 8px rgba(0,0,0,0.8); animation:scoreFloat 0.85s ease-out forwards; z-index:50; font-family:'Nunito',sans-serif; }
+    @keyframes scoreFloat { 0%{transform:translateY(0) scale(0.6);opacity:1} 100%{transform:translateY(-70px) scale(1.1);opacity:0} }
+
+    /* POWER-UP FLASH */
+    .rocket-flash { animation:rocketFlash 0.4s ease-out; }
+    @keyframes rocketFlash { 0%,100%{filter:brightness(1)} 50%{filter:brightness(3)} }
+
+    @media (max-width:380px) { .tile{font-size:22px !important} }
   </style>
 </head>
 <body>
-
-<!-- Background stars -->
 <div class="stars" id="stars"></div>
 
-<!-- ══ MENU ══ -->
+<!-- MENU -->
 <div id="menu-screen" class="screen active">
-  <div class="menu-top">
-    <span class="lion-castle">🦁</span>
-    <div class="game-title">Lion Match</div>
-    <div class="game-subtitle">Match-3 Puzzle Adventure</div>
-  </div>
-
+  <span class="lion-logo">🦁</span>
+  <div class="game-title">Lion Match</div>
+  <div class="game-subtitle">Match-3 Puzzle Adventure</div>
   <div class="menu-card">
     <div class="lives-row" id="lives-display"></div>
     <button class="btn btn-play" onclick="startGame()">▶ &nbsp;PLAY</button>
@@ -576,7 +190,7 @@
   </div>
 </div>
 
-<!-- ══ GAME ══ -->
+<!-- GAME -->
 <div id="game-screen" class="screen">
   <div class="hud">
     <div class="hud-pill">
@@ -595,12 +209,23 @@
   </div>
 
   <div class="bottom-bar">
-    <div class="hint-text" id="hint-text">Tap a gem to select it</div>
+    <div class="hint-text" id="hint-text">Drag gems to swap them!</div>
     <div class="coins-bar">🪙 <span id="game-coins">100</span></div>
+    <div class="booster-row">
+      <button class="booster-btn" id="btn-hammer" onclick="activateBoosterMode('hammer')" title="Hammer: remove any tile">
+        <span>🔨</span>HAMMER
+      </button>
+      <button class="booster-btn" id="btn-rocket-b" onclick="activateBoosterMode('rocket')">
+        <span>🚀</span>ROCKET
+      </button>
+      <button class="booster-btn" id="btn-bomb-b" onclick="activateBoosterMode('bomb')">
+        <span>💣</span>BOMB
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- ══ SHOP ══ -->
+<!-- SHOP -->
 <div id="shop-screen" class="screen">
   <div class="page-header">
     <div class="page-title">🪙 Shop</div>
@@ -609,537 +234,790 @@
   <div class="shop-grid">
     <div class="shop-item" onclick="buyCoins(100,'$0.99')">
       <span class="shop-icon">🪙</span>
-      <div class="shop-info">
-        <div class="shop-name">Starter Coins</div>
-        <div class="shop-desc">100 coins to get started</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Starter Coins</div><div class="shop-desc">100 coins to get started</div></div>
       <div class="shop-price">$0.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(500,'$2.99')">
       <span class="badge">POPULAR</span>
       <span class="shop-icon">💰</span>
-      <div class="shop-info">
-        <div class="shop-name">Coin Bundle</div>
-        <div class="shop-desc">500 coins — great value!</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Coin Bundle</div><div class="shop-desc">500 coins — great value!</div></div>
       <div class="shop-price">$2.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(1200,'$9.99')">
       <span class="shop-icon">💎</span>
-      <div class="shop-info">
-        <div class="shop-name">Mega Bundle</div>
-        <div class="shop-desc">1,200 coins — best deal</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Mega Bundle</div><div class="shop-desc">1,200 coins — best deal</div></div>
       <div class="shop-price">$9.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(2500,'$19.99')">
       <span class="badge">BEST VALUE</span>
       <span class="shop-icon">👑</span>
-      <div class="shop-info">
-        <div class="shop-name">Royal Bundle</div>
-        <div class="shop-desc">2,500 coins — ultimate pack</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Royal Bundle</div><div class="shop-desc">2,500 coins — ultimate pack</div></div>
       <div class="shop-price">$19.99</div>
     </div>
     <div class="shop-item" onclick="buyLives()">
       <span class="shop-icon">❤️</span>
-      <div class="shop-info">
-        <div class="shop-name">+3 Lives</div>
-        <div class="shop-desc">Keep playing without waiting</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">+3 Lives</div><div class="shop-desc">Keep playing without waiting</div></div>
       <div class="shop-price">50 🪙</div>
     </div>
-    <div class="shop-item" onclick="buyBooster('hammer')">
+    <div class="shop-item" onclick="buyBoosterItem('hammer')">
       <span class="shop-icon">🔨</span>
-      <div class="shop-info">
-        <div class="shop-name">Hammer</div>
-        <div class="shop-desc">Remove any single tile</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Hammer</div><div class="shop-desc">Remove any single tile</div></div>
       <div class="shop-price">20 🪙</div>
     </div>
-    <div class="shop-item" onclick="buyBooster('rocket')">
+    <div class="shop-item" onclick="buyBoosterItem('rocket')">
       <span class="shop-icon">🚀</span>
-      <div class="shop-info">
-        <div class="shop-name">Rocket</div>
-        <div class="shop-desc">Clears an entire row</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Rocket</div><div class="shop-desc">Clears an entire row or column</div></div>
       <div class="shop-price">30 🪙</div>
     </div>
-    <div class="shop-item" onclick="buyBooster('bomb')">
+    <div class="shop-item" onclick="buyBoosterItem('bomb')">
       <span class="shop-icon">💣</span>
-      <div class="shop-info">
-        <div class="shop-name">Bomb</div>
-        <div class="shop-desc">Destroys a 3×3 area</div>
-      </div>
+      <div class="shop-info"><div class="shop-name">Bomb</div><div class="shop-desc">Destroys a 5×5 area</div></div>
       <div class="shop-price">40 🪙</div>
     </div>
   </div>
   <button class="btn-back" onclick="showScreen('menu-screen')">← Back to Menu</button>
 </div>
 
-<!-- ══ LEADERBOARD ══ -->
+<!-- LEADERBOARD -->
 <div id="lb-screen" class="screen">
   <div class="page-header">
     <div class="page-title">🏆 Leaderboard</div>
     <div class="page-subtitle">Global Rankings</div>
   </div>
   <div class="lb-list" id="lb-list"></div>
-  <button class="btn-back" onclick="showScreen('menu-screen')" style="margin-top:16px">← Back</button>
+  <button class="btn-back" onclick="showScreen('menu-screen')" style="margin-top:14px">← Back</button>
 </div>
 
-<!-- ══ GAME OVER ══ -->
+<!-- GAME OVER -->
 <div class="overlay" id="game-over">
   <div class="result-card">
     <span class="result-emoji" id="go-emoji">🎉</span>
     <div class="result-stars" id="go-stars">⭐⭐⭐</div>
     <div class="result-title" id="go-title">Level Complete!</div>
     <div class="result-score" id="go-score">Score: 0</div>
-    <button class="btn btn-result-main" id="go-btn" onclick="handleMainBtn()"></button>
+    <button class="btn btn-result-main" id="go-btn" onclick="handleMainBtn()">▶ Next Level</button>
     <button class="btn btn-result-alt" id="go-moves-btn" onclick="buyExtraMoves()" style="display:none">🪙 +5 Moves (50 coins)</button>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  STARS
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
 (function() {
-  const container = document.getElementById('stars');
-  for (let i = 0; i < 80; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 2.5 + 0.5;
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}%;
-      top:${Math.random()*100}%;
-      animation-duration:${2+Math.random()*4}s;
-      animation-delay:${Math.random()*4}s;
-    `;
-    container.appendChild(s);
+  const c = document.getElementById('stars');
+  for (let i=0;i<80;i++) {
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    c.appendChild(s);
   }
 })();
 
-// ════════════════════════════════════════
-//  GAME STATE
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════
 const GRID = 8;
 const GEMS = [
-  { name:'ruby',     cls:'gem-ruby',     emoji:'💎', label:'🔴' },
-  { name:'sapphire', cls:'gem-sapphire', emoji:'💠', label:'🔵' },
-  { name:'emerald',  cls:'gem-emerald',  emoji:'💚', label:'🟢' },
-  { name:'topaz',    cls:'gem-topaz',    emoji:'⭐', label:'🟡' },
-  { name:'amethyst', cls:'gem-amethyst', emoji:'🔮', label:'🟣' },
-  { name:'diamond',  cls:'gem-diamond',  emoji:'🌟', label:'⚪' },
+  { name:'ruby',     cls:'gem-ruby',     emoji:'💎' },
+  { name:'sapphire', cls:'gem-sapphire', emoji:'💠' },
+  { name:'emerald',  cls:'gem-emerald',  emoji:'💚' },
+  { name:'topaz',    cls:'gem-topaz',    emoji:'⭐' },
+  { name:'amethyst', cls:'gem-amethyst', emoji:'🔮' },
+  { name:'diamond',  cls:'gem-diamond',  emoji:'🌟' },
 ];
-
-let G = {
-  board: [], score: 0, moves: 20, selected: null,
-  coins: 100, lives: 5, level: 1, processing: false
+const PU = {
+  rocket_h:  { cls:'gem-rocket-h', emoji:'➡️', label:'↔' },
+  rocket_v:  { cls:'gem-rocket-v', emoji:'⬆️', label:'↕' },
+  tnt:       { cls:'gem-tnt',      emoji:'💥', label:'TNT' },
+  lightball: { cls:'gem-lightball',emoji:'🔵', label:'★' },
 };
 
-let leaderboard = [
-  { name: '🦁 LionKing99',  score: 48200 },
-  { name: '🐯 TigerPaw',    score: 41500 },
-  { name: '🐺 WolfMatch',   score: 38900 },
-  { name: '🦊 FoxPuzzle',   score: 31200 },
-  { name: '🐻 BearGems',    score: 27800 },
-  { name: '👤 You',         score: 0 },
+let tileId = 0;
+function newTile(gem, powerup=null) { return { gem, powerup, id:++tileId }; }
+function randGem() { return Math.floor(Math.random()*6); }
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let G = {
+  board:[], score:0, moves:20, coins:100, lives:5, level:1, processing:false,
+  boosters:{ hammer:1, rocket:1, bomb:1 },
+  activeBooster:null
+};
+let isWon = false;
+
+const lb = [
+  { name:'🦁 LionKing99', score:48200 },
+  { name:'🐯 TigerPaw',   score:41500 },
+  { name:'🐺 WolfMatch',  score:38900 },
+  { name:'🦊 FoxPuzzle',  score:31200 },
+  { name:'🐻 BearGems',   score:27800 },
+  { name:'👤 You',        score:0 },
 ];
 
-let tileId = 0;
-function newTile(gem) { return { gem, id: ++tileId, isNew: false }; }
-function randomGem() { return Math.floor(Math.random() * 6); }
-
+// ══════════════════════════════════════════════
+//  BOARD INIT
+// ══════════════════════════════════════════════
 function createBoard() {
   const b = [];
-  for (let r = 0; r < GRID; r++) {
-    b[r] = [];
-    for (let c = 0; c < GRID; c++) {
-      let g = randomGem();
+  for (let r=0;r<GRID;r++) {
+    b[r]=[];
+    for (let c=0;c<GRID;c++) {
+      let g=randGem();
       while (
-        (c >= 2 && b[r][c-1]?.gem === g && b[r][c-2]?.gem === g) ||
-        (r >= 2 && b[r-1]?.[c]?.gem === g && b[r-2]?.[c]?.gem === g)
-      ) g = randomGem();
-      b[r][c] = newTile(g);
+        (c>=2 && b[r][c-1]?.gem===g && b[r][c-2]?.gem===g) ||
+        (r>=2 && b[r-1]?.[c]?.gem===g && b[r-2]?.[c]?.gem===g)
+      ) g=randGem();
+      b[r][c]=newTile(g);
     }
   }
   return b;
 }
 
-// ════════════════════════════════════════
-//  MATCH LOGIC
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  MATCH ENGINE
+// ══════════════════════════════════════════════
 function findMatches(board) {
-  const matched = new Set();
-  for (let r = 0; r < GRID; r++) {
-    for (let c = 0; c < GRID - 2; c++) {
-      const g = board[r][c]?.gem;
-      if (g === undefined) continue;
-      if (board[r][c+1]?.gem === g && board[r][c+2]?.gem === g) {
-        let e = c+2;
-        while (e+1 < GRID && board[r][e+1]?.gem === g) e++;
-        for (let k=c; k<=e; k++) matched.add(`${r},${k}`);
+  const matched=new Set();
+  for (let r=0;r<GRID;r++) {
+    for (let c=0;c<GRID-2;c++) {
+      const t=board[r][c];
+      if (!t || t.powerup) continue;
+      const g=t.gem;
+      if (board[r][c+1]?.gem===g && !board[r][c+1]?.powerup &&
+          board[r][c+2]?.gem===g && !board[r][c+2]?.powerup) {
+        let e=c+2;
+        while (e+1<GRID && board[r][e+1]?.gem===g && !board[r][e+1]?.powerup) e++;
+        for (let k=c;k<=e;k++) matched.add(`${r},${k}`);
       }
     }
   }
-  for (let c = 0; c < GRID; c++) {
-    for (let r = 0; r < GRID - 2; r++) {
-      const g = board[r][c]?.gem;
-      if (g === undefined) continue;
-      if (board[r+1]?.[c]?.gem === g && board[r+2]?.[c]?.gem === g) {
-        let e = r+2;
-        while (e+1 < GRID && board[e+1]?.[c]?.gem === g) e++;
-        for (let k=r; k<=e; k++) matched.add(`${k},${c}`);
+  for (let c=0;c<GRID;c++) {
+    for (let r=0;r<GRID-2;r++) {
+      const t=board[r][c];
+      if (!t || t.powerup) continue;
+      const g=t.gem;
+      if (board[r+1]?.[c]?.gem===g && !board[r+1]?.[c]?.powerup &&
+          board[r+2]?.[c]?.gem===g && !board[r+2]?.[c]?.powerup) {
+        let e=r+2;
+        while (e+1<GRID && board[e+1]?.[c]?.gem===g && !board[e+1]?.[c]?.powerup) e++;
+        for (let k=r;k<=e;k++) matched.add(`${k},${c}`);
       }
     }
   }
   return matched;
 }
 
-function removeMatches(board, matched) {
-  const b = board.map(row => row.map(t => t ? {...t} : null));
-  for (const key of matched) {
-    const [r, c] = key.split(',').map(Number);
-    b[r][c] = null;
+// Detect which powerup to create at a match
+function detectPowerup(board, matchKeys, swapR, swapC) {
+  const cells = [...matchKeys].map(k => { const [r,c]=k.split(',').map(Number); return {r,c}; });
+  const rows={}, cols={};
+  cells.forEach(({r,c}) => {
+    (rows[r]=rows[r]||[]).push(c);
+    (cols[c]=cols[c]||[]).push(r);
+  });
+
+  // Check for L/T shape (intersection of h>=3 and v>=3) → TNT
+  for (const [r, rCols] of Object.entries(rows)) {
+    if (rCols.length>=3) {
+      for (const c of rCols) {
+        if ((cols[c]||[]).length>=3) {
+          return { type:'tnt', r:Number(r), c:Number(c) };
+        }
+      }
+    }
   }
-  return b;
+
+  // Match 5+ in row → lightball
+  for (const [r, rCols] of Object.entries(rows)) {
+    if (rCols.length>=5) {
+      const c = swapC!=null && rCols.includes(swapC) ? swapC : rCols[Math.floor(rCols.length/2)];
+      return { type:'lightball', r:Number(r), c:Number(c) };
+    }
+  }
+  // Match 5+ in col → lightball
+  for (const [c, cRows] of Object.entries(cols)) {
+    if (cRows.length>=5) {
+      const r = swapR!=null && cRows.includes(swapR) ? swapR : cRows[Math.floor(cRows.length/2)];
+      return { type:'lightball', r:Number(r), c:Number(c) };
+    }
+  }
+
+  // Match 4 in row → rocket_h
+  for (const [r, rCols] of Object.entries(rows)) {
+    if (rCols.length===4) {
+      const c = swapC!=null && rCols.includes(swapC) ? swapC : rCols[1];
+      return { type:'rocket_h', r:Number(r), c:Number(c) };
+    }
+  }
+  // Match 4 in col → rocket_v
+  for (const [c, cRows] of Object.entries(cols)) {
+    if (cRows.length===4) {
+      const r = swapR!=null && cRows.includes(swapR) ? swapR : cRows[1];
+      return { type:'rocket_v', r:Number(r), c:Number(c) };
+    }
+  }
+
+  return null;
 }
 
-function dropTiles(board) {
-  const b = board.map(row => row.map(t => t ? {...t} : null));
-  for (let c = 0; c < GRID; c++) {
-    let empty = GRID-1;
-    for (let r = GRID-1; r >= 0; r--) {
-      if (b[r][c] !== null) {
-        if (r !== empty) { b[empty][c] = b[r][c]; b[r][c] = null; }
-        empty--;
-      }
+function applyGravity(board) {
+  const b = board.map(row => row.map(t => t?{...t}:null));
+  for (let c=0;c<GRID;c++) {
+    let empty=GRID-1;
+    for (let r=GRID-1;r>=0;r--) {
+      if (b[r][c]!==null) { if(r!==empty){b[empty][c]=b[r][c];b[r][c]=null;} empty--; }
     }
   }
   return b;
 }
 
-function fillBoard(board) {
-  const b = board.map(row => row.map(t => t ? {...t} : null));
-  for (let r = 0; r < GRID; r++)
-    for (let c = 0; c < GRID; c++)
-      if (!b[r][c]) b[r][c] = { ...newTile(randomGem()), isNew: true };
+function refill(board) {
+  const b=board.map(row=>row.map(t=>t?{...t}:null));
+  for (let r=0;r<GRID;r++) for (let c=0;c<GRID;c++) if (!b[r][c]) b[r][c]={...newTile(randGem()),isNew:true};
   return b;
 }
 
-function calcScore(matchSize) {
-  return matchSize >= 5 ? matchSize * 80 : matchSize === 4 ? matchSize * 50 : matchSize * 30;
+// Activate a power-up tile, return set of cells to destroy
+function activatePowerup(board, r, c, triggerGem=null) {
+  const tile=board[r][c];
+  if (!tile?.powerup) return new Set();
+  const affected=new Set();
+
+  if (tile.powerup==='rocket_h') {
+    for (let cc=0;cc<GRID;cc++) affected.add(`${r},${cc}`);
+  } else if (tile.powerup==='rocket_v') {
+    for (let rr=0;rr<GRID;rr++) affected.add(`${rr},${c}`);
+  } else if (tile.powerup==='tnt') {
+    for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+      const nr=r+dr, nc=c+dc;
+      if (nr>=0&&nr<GRID&&nc>=0&&nc<GRID) affected.add(`${nr},${nc}`);
+    }
+  } else if (tile.powerup==='lightball') {
+    // Clear all of triggerGem color (or random gem if solo activated)
+    const targetGem = triggerGem!==null ? triggerGem : Math.floor(Math.random()*6);
+    for (let rr=0;rr<GRID;rr++) for (let cc=0;cc<GRID;cc++)
+      if (board[rr][cc]?.gem===targetGem) affected.add(`${rr},${cc}`);
+    affected.add(`${r},${c}`);
+  }
+  return affected;
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  TILE SIZE
+// ══════════════════════════════════════════════
+function getTileSize() {
+  const available = Math.min(window.innerWidth, 440) - 34;
+  return Math.floor(available / GRID);
+}
+
+// ══════════════════════════════════════════════
 //  RENDER
-// ════════════════════════════════════════
-function renderBoard(animateNew = false) {
+// ══════════════════════════════════════════════
+function renderBoard(animNew=false) {
   const el = document.getElementById('board');
-  const tileSize = Math.min(42, Math.floor((Math.min(window.innerWidth, 420) - 40) / GRID));
-  el.style.gridTemplateColumns = `repeat(${GRID}, ${tileSize}px)`;
+  const ts = getTileSize();
+  el.style.gridTemplateColumns = `repeat(${GRID},${ts}px)`;
   el.innerHTML = '';
 
-  for (let r = 0; r < GRID; r++) {
-    for (let c = 0; c < GRID; c++) {
-      const tile = G.board[r][c];
-      const div = document.createElement('div');
-      div.className = 'tile';
-      div.style.width = div.style.height = tileSize + 'px';
-      div.style.fontSize = Math.floor(tileSize * 0.48) + 'px';
-      div.style.borderRadius = Math.floor(tileSize * 0.28) + 'px';
+  for (let r=0;r<GRID;r++) {
+    for (let c=0;c<GRID;c++) {
+      const tile=G.board[r][c];
+      const div=document.createElement('div');
+      div.className='tile';
+      div.style.width=div.style.height=ts+'px';
+      div.style.fontSize=Math.floor(ts*0.5)+'px';
+      div.style.borderRadius=Math.floor(ts*0.28)+'px';
+      div.dataset.r=r; div.dataset.c=c;
 
       if (tile) {
-        const gem = GEMS[tile.gem];
-        div.classList.add(gem.cls);
-        div.textContent = gem.emoji;
-        if (G.selected?.r === r && G.selected?.c === c) div.classList.add('selected');
-        if (animateNew && tile.isNew) div.classList.add('falling');
-        div.addEventListener('click', () => handleTileClick(r, c));
+        if (tile.powerup) {
+          const pu=PU[tile.powerup];
+          div.classList.add(pu.cls);
+          div.textContent=pu.emoji;
+          const lbl=document.createElement('span');
+          lbl.className='pu-label'; lbl.textContent=pu.label;
+          div.appendChild(lbl);
+        } else {
+          div.classList.add(GEMS[tile.gem].cls);
+          div.textContent=GEMS[tile.gem].emoji;
+        }
+        if (animNew && tile.isNew) div.classList.add('falling');
+        if (G.activeBooster) div.style.cursor='crosshair';
       } else {
-        div.style.background = 'rgba(0,0,0,0.2)';
-        div.style.cursor = 'default';
+        div.style.background='rgba(0,0,0,0.2)';
+        div.style.cursor='default';
       }
       el.appendChild(div);
     }
   }
+
+  setupDrag();
 }
 
 function updateHUD() {
-  document.getElementById('hud-score').textContent = G.score.toLocaleString();
-  const movesEl = document.getElementById('hud-moves');
-  movesEl.textContent = G.moves;
-  movesEl.className = 'hud-value' + (G.moves <= 5 ? ' danger' : '');
-  document.getElementById('hint-text').textContent =
-    G.selected ? '✨ Now tap an adjacent gem!' : 'Tap a gem to select it';
-  document.getElementById('game-coins').textContent = G.coins.toLocaleString();
+  document.getElementById('hud-score').textContent=G.score.toLocaleString();
+  const mv=document.getElementById('hud-moves');
+  mv.textContent=G.moves;
+  mv.className='hud-value'+(G.moves<=5?' danger':'');
+  document.getElementById('game-coins').textContent=G.coins.toLocaleString();
+  const hint=document.getElementById('hint-text');
+  if (G.activeBooster) hint.textContent=`🎯 Tap a tile to use ${G.activeBooster}!`;
+  else hint.textContent='Drag gems to swap them!';
+  // Update booster buttons
+  ['hammer','rocket','bomb'].forEach(b => {
+    const btn=document.getElementById(`btn-${b==='rocket'?'rocket-b':b==='bomb'?'bomb-b':b}`);
+    if (!btn) return;
+    btn.classList.toggle('active-mode', G.activeBooster===b);
+  });
 }
 
 function updateMenuUI() {
-  document.getElementById('menu-coins').textContent = G.coins.toLocaleString();
-  document.getElementById('menu-level').textContent = G.level;
-  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
-  const livesEl = document.getElementById('lives-display');
-  livesEl.innerHTML = Array.from({length:5}, (_,i) =>
-    `<span class="heart${i < G.lives ? '' : ' empty'}">❤️</span>`
-  ).join('');
+  document.getElementById('menu-coins').textContent=G.coins.toLocaleString();
+  document.getElementById('menu-level').textContent=G.level;
+  document.getElementById('shop-coins').textContent=G.coins.toLocaleString();
+  const livesEl=document.getElementById('lives-display');
+  livesEl.innerHTML=Array.from({length:5},(_,i)=>`<span class="heart${i<G.lives?'':' empty'}">❤️</span>`).join('');
 }
 
-// ════════════════════════════════════════
-//  SCREENS
-// ════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (id === 'menu-screen') updateMenuUI();
-  if (id === 'lb-screen') renderLeaderboard();
+// ══════════════════════════════════════════════
+//  DRAG & DROP SWAP
+// ══════════════════════════════════════════════
+let dragState = null;
+
+function setupDrag() {
+  const boardEl=document.getElementById('board');
+  boardEl.removeEventListener('mousedown', onDragStart);
+  boardEl.removeEventListener('touchstart', onTouchStart);
+  boardEl.addEventListener('mousedown', onDragStart, {passive:false});
+  boardEl.addEventListener('touchstart', onTouchStart, {passive:false});
 }
 
-function startGame() {
-  if (G.lives <= 0) { alert('No lives! Buy more in the Shop.'); return; }
-  G.board = createBoard();
-  G.score = 0;
-  G.moves = 20 + Math.floor(G.level / 5) * 2;
-  G.selected = null;
-  G.processing = false;
-  document.getElementById('game-over').classList.remove('show');
-  showScreen('game-screen');
+function getCell(x, y) {
+  const boardEl=document.getElementById('board');
+  const rect=boardEl.getBoundingClientRect();
+  const ts=getTileSize()+5;
+  const c=Math.floor((x-rect.left)/ts);
+  const r=Math.floor((y-rect.top)/ts);
+  if (r<0||r>=GRID||c<0||c>=GRID) return null;
+  return {r,c};
+}
+
+function onTouchStart(e) {
+  if (G.processing) return;
+  e.preventDefault();
+  const t=e.touches[0];
+  startDrag(t.clientX, t.clientY);
+  const onMove=ev=>{ ev.preventDefault(); onDragMove(ev.touches[0].clientX,ev.touches[0].clientY); };
+  const onEnd=ev=>{ ev.preventDefault(); onDragEnd(ev.changedTouches[0].clientX,ev.changedTouches[0].clientY); document.removeEventListener('touchmove',onMove); document.removeEventListener('touchend',onEnd); };
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('touchend',onEnd,{passive:false});
+}
+
+function onDragStart(e) {
+  if (G.processing) return;
+  e.preventDefault();
+  startDrag(e.clientX, e.clientY);
+  const onMove=ev=>onDragMove(ev.clientX,ev.clientY);
+  const onEnd=ev=>{ onDragEnd(ev.clientX,ev.clientY); document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onEnd); };
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onEnd);
+}
+
+function startDrag(x,y) {
+  const cell=getCell(x,y);
+  if (!cell || !G.board[cell.r][cell.c]) return;
+  if (G.activeBooster) { handleBoosterClick(cell.r, cell.c); return; }
+  dragState={ from:cell, lastTarget:null };
+  const idx=cell.r*GRID+cell.c;
+  const boardEl=document.getElementById('board');
+  if (boardEl.children[idx]) boardEl.children[idx].classList.add('selected');
+}
+
+function onDragMove(x,y) {
+  if (!dragState) return;
+  const cell=getCell(x,y);
+  if (!cell) return;
+  const {from}=dragState;
+  const dr=Math.abs(from.r-cell.r), dc=Math.abs(from.c-cell.c);
+  const adjacent=(dr===1&&dc===0)||(dr===0&&dc===1);
+  const boardEl=document.getElementById('board');
+
+  // Clear previous drag-target highlight
+  if (dragState.lastTarget) {
+    const prev=dragState.lastTarget;
+    const prevEl=boardEl.children[prev.r*GRID+prev.c];
+    if (prevEl) prevEl.classList.remove('drag-target');
+  }
+
+  if (adjacent && (cell.r!==from.r||cell.c!==from.c)) {
+    const targetEl=boardEl.children[cell.r*GRID+cell.c];
+    if (targetEl) targetEl.classList.add('drag-target');
+    dragState.lastTarget=cell;
+  } else {
+    dragState.lastTarget=null;
+  }
+}
+
+function onDragEnd(x,y) {
+  if (!dragState) return;
+  const boardEl=document.getElementById('board');
+
+  // Clean up visuals
+  const fromEl=boardEl.children[dragState.from.r*GRID+dragState.from.c];
+  if (fromEl) fromEl.classList.remove('selected','dragging');
+  if (dragState.lastTarget) {
+    const tEl=boardEl.children[dragState.lastTarget.r*GRID+dragState.lastTarget.c];
+    if (tEl) tEl.classList.remove('drag-target');
+  }
+
+  const cell=getCell(x,y);
+  if (cell && dragState.lastTarget) {
+    const to=dragState.lastTarget;
+    dragState=null;
+    doSwap(dragState?.from||{r:dragState?.from?.r,c:dragState?.from?.c}, to);
+    return;
+  }
+
+  // Use the drop position
+  if (cell) {
+    const from=dragState.from;
+    dragState=null;
+    const dr=Math.abs(from.r-cell.r), dc=Math.abs(from.c-cell.c);
+    if ((dr===1&&dc===0)||(dr===0&&dc===1)) {
+      doSwap(from, cell);
+      return;
+    }
+  }
+  dragState=null;
   renderBoard();
-  updateHUD();
 }
 
-// ════════════════════════════════════════
-//  GAME LOGIC
-// ════════════════════════════════════════
-let isWon = false;
+// ══════════════════════════════════════════════
+//  SWAP & PROCESS
+// ══════════════════════════════════════════════
+async function doSwap(from, to) {
+  if (!from || !to) { dragState=null; return; }
+  if (G.processing) return;
+  if (!G.board[from.r]?.[from.c] || !G.board[to.r]?.[to.c]) return;
 
-async function handleTileClick(r, c) {
-  if (G.processing || !G.board[r][c] || G.moves <= 0) return;
+  G.processing=true;
+  const nb=G.board.map(row=>[...row]);
+  [nb[from.r][from.c], nb[to.r][to.c]] = [nb[to.r][to.c], nb[from.r][from.c]];
 
-  if (!G.selected) {
-    G.selected = { r, c };
-    renderBoard(); updateHUD();
-    return;
+  // Check for powerup activations from the swap
+  const fromTile=nb[from.r][from.c];
+  const toTile=nb[to.r][to.c];
+  let specialActivation=null;
+
+  // Lightball + anything = clear that color
+  if (fromTile?.powerup==='lightball' || toTile?.powerup==='lightball') {
+    specialActivation={ type:'lightball_swap', from, to };
+  }
+  // Two powerups together = combo
+  else if (fromTile?.powerup && toTile?.powerup) {
+    specialActivation={ type:'combo', from, to };
   }
 
-  const { r: sr, c: sc } = G.selected;
-  const dr = Math.abs(sr-r), dc = Math.abs(sc-c);
-  const adjacent = (dr===1&&dc===0)||(dr===0&&dc===1);
-
-  if (!adjacent) {
-    G.selected = { r, c };
-    renderBoard(); updateHUD();
-    return;
-  }
-
-  G.selected = null;
-  G.processing = true;
-
-  // Swap
-  const nb = G.board.map(row => [...row]);
-  [nb[sr][sc], nb[r][c]] = [nb[r][c], nb[sr][sc]];
-
-  const matches = findMatches(nb);
-  if (matches.size === 0) {
-    // Invalid - shake tiles
-    const boardEl = document.getElementById('board');
-    [boardEl.children[sr*GRID+sc], boardEl.children[r*GRID+c]].forEach(el => {
-      if (el) { el.classList.add('invalid'); setTimeout(()=>el.classList.remove('invalid'),300); }
+  const matches=findMatches(nb);
+  if (!specialActivation && matches.size===0 && !fromTile?.powerup && !toTile?.powerup) {
+    // Invalid - shake
+    const boardEl=document.getElementById('board');
+    [boardEl.children[from.r*GRID+from.c], boardEl.children[to.r*GRID+to.c]].forEach(el=>{
+      if(el){el.classList.add('invalid');setTimeout(()=>el.classList.remove('invalid'),300);}
     });
-    G.processing = false;
-    G.selected = null;
+    G.processing=false;
     renderBoard(); updateHUD();
     return;
   }
 
   G.moves--;
-  G.board = nb;
+  G.board=nb;
+
+  // Handle special powerup activation
+  if (specialActivation) {
+    await handleSpecialActivation(specialActivation);
+  } else if (fromTile?.powerup || toTile?.powerup) {
+    // A powerup was swapped into a match position
+    await processMatches(from.r, from.c);
+  } else {
+    await processMatches(from.r, from.c);
+  }
+}
+
+async function handleSpecialActivation({type, from, to}) {
+  const nb=G.board.map(row=>[...row]);
+  let toDestroy=new Set();
+
+  if (type==='lightball_swap') {
+    // Find which is lightball, and the other's gem
+    const lbPos = nb[from.r][from.c]?.powerup==='lightball' ? from : to;
+    const otherPos = lbPos===from ? to : from;
+    const otherGem = nb[otherPos.r][otherPos.c]?.gem;
+    const affected=activatePowerup(nb, lbPos.r, lbPos.c, otherGem);
+    affected.forEach(k=>toDestroy.add(k));
+    toDestroy.add(`${otherPos.r},${otherPos.c}`);
+  } else if (type==='combo') {
+    // Both powerups fire
+    const af1=activatePowerup(nb, from.r, from.c);
+    const af2=activatePowerup(nb, to.r, to.c);
+    af1.forEach(k=>toDestroy.add(k));
+    af2.forEach(k=>toDestroy.add(k));
+  }
+
+  await flashAndDestroy(toDestroy, nb);
   await processMatches();
 }
 
-async function processMatches() {
-  let found = true;
+async function processMatches(swapR=null, swapC=null) {
+  let found=true;
   while (found) {
-    const matches = findMatches(G.board);
-    if (matches.size === 0) { found = false; break; }
+    const matches=findMatches(G.board);
+    let allDestroy=new Set([...matches]);
 
-    // Flash
-    const boardEl = document.getElementById('board');
+    // Check if any matched tiles have powerups adjacent — activate them too
+    const puActivated=new Set();
     for (const key of matches) {
-      const [r,c] = key.split(',').map(Number);
-      const el = boardEl.children[r*GRID+c];
-      if (el) el.classList.add('exploding');
+      const [r,c]=key.split(',').map(Number);
+      const t=G.board[r][c];
+      if (t?.powerup && !puActivated.has(key)) {
+        puActivated.add(key);
+        const af=activatePowerup(G.board, r, c, null);
+        af.forEach(k=>allDestroy.add(k));
+      }
     }
 
-    // Score popup
-    const scoreGain = calcScore(matches.size);
+    if (allDestroy.size===0) { found=false; break; }
+
+    // Detect powerup creation
+    const newPU=detectPowerup(G.board, matches, swapR, swapC);
+
+    const nb=G.board.map(row=>row.map(t=>t?{...t}:null));
+    const scoreGain=calcScore(allDestroy.size);
     showScorePopup(scoreGain);
-    await sleep(250);
+    G.score+=scoreGain;
 
-    G.score += scoreGain;
-    G.board = removeMatches(G.board, matches);
-    G.board = dropTiles(G.board);
-    G.board = fillBoard(G.board);
+    // Flash
+    const boardEl=document.getElementById('board');
+    for (const key of allDestroy) {
+      const [r,c]=key.split(',').map(Number);
+      const el=boardEl.children[r*GRID+c];
+      if(el) el.classList.add('exploding');
+    }
+    await sleep(260);
 
-    renderBoard(true);
-    updateHUD();
-    await sleep(220);
+    // Remove destroyed
+    for (const key of allDestroy) {
+      const [r,c]=key.split(',').map(Number);
+      nb[r][c]=null;
+    }
+
+    // Place new powerup
+    if (newPU) {
+      const orig=G.board[newPU.r][newPU.c];
+      nb[newPU.r][newPU.c]=newTile(orig?.gem??randGem(), newPU.type);
+    }
+
+    G.board=applyGravity(nb);
+    G.board=refill(G.board);
+    swapR=null; swapC=null;
+    renderBoard(true); updateHUD();
+    await sleep(230);
   }
 
-  G.processing = false;
+  G.processing=false;
   updateHUD();
-  if (G.moves <= 0) showGameOver();
+  if (G.moves<=0) showGameOver();
 }
 
-function showScorePopup(amount) {
-  const boardEl = document.getElementById('board');
-  const rect = boardEl.getBoundingClientRect();
-  const popup = document.createElement('div');
-  popup.className = 'score-popup';
-  popup.textContent = `+${amount}`;
-  popup.style.left = (rect.left + rect.width/2 - 30) + 'px';
-  popup.style.top = (rect.top + rect.height/2) + 'px';
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 800);
+async function flashAndDestroy(keys, board) {
+  const boardEl=document.getElementById('board');
+  for (const key of keys) {
+    const [r,c]=key.split(',').map(Number);
+    const el=boardEl.children[r*GRID+c];
+    if(el) el.classList.add('exploding');
+  }
+  const scoreGain=calcScore(keys.size);
+  showScorePopup(scoreGain); G.score+=scoreGain;
+  await sleep(260);
+
+  const nb=board.map(row=>row.map(t=>t?{...t}:null));
+  for (const key of keys) {
+    const [r,c]=key.split(',').map(Number);
+    nb[r][c]=null;
+  }
+  G.board=refill(applyGravity(nb));
+  renderBoard(true); updateHUD();
+  await sleep(230);
+  await processMatches();
 }
 
-function showGameOver() {
-  const pct = G.score / (G.level * 1500 + 1500);
-  const won = G.score >= 1500;
-  isWon = won;
+function calcScore(n) { return n>=5?n*80:n===4?n*50:n*30; }
 
-  const stars = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.6 ? '⭐⭐' : '⭐';
-  document.getElementById('go-emoji').textContent = won ? '🎉' : '😢';
-  document.getElementById('go-stars').textContent = won ? stars : '';
-  document.getElementById('go-title').textContent = won ? 'Level Complete!' : 'Out of Moves!';
-  document.getElementById('go-score').textContent = `Score: ${G.score.toLocaleString()}`;
-  document.getElementById('go-btn').textContent = won ? '▶ Next Level' : '🔄 Try Again';
-  document.getElementById('go-moves-btn').style.display = won ? 'none' : '';
+// ══════════════════════════════════════════════
+//  BOOSTERS
+// ══════════════════════════════════════════════
+function activateBoosterMode(type) {
+  if (G.processing) return;
+  if (G.boosters[type]<=0) { showToast(`No ${type}s! Buy in Shop.`); return; }
+  G.activeBooster = G.activeBooster===type ? null : type;
+  updateHUD();
+}
 
-  if (won) {
-    const youEntry = leaderboard.find(l => l.name === '👤 You');
-    if (youEntry) youEntry.score = Math.max(youEntry.score, G.score);
-    spawnConfetti();
+async function handleBoosterClick(r, c) {
+  if (!G.activeBooster || !G.board[r][c]) return;
+  const type=G.activeBooster;
+  G.activeBooster=null;
+  G.boosters[type]--;
+  G.processing=true;
+
+  let toDestroy=new Set();
+  if (type==='hammer') {
+    toDestroy.add(`${r},${c}`);
+  } else if (type==='rocket') {
+    for (let cc=0;cc<GRID;cc++) toDestroy.add(`${r},${cc}`);
+    for (let rr=0;rr<GRID;rr++) toDestroy.add(`${rr},${c}`);
+  } else if (type==='bomb') {
+    for (let dr=-2;dr<=2;dr++) for (let dc=-2;dc<=2;dc++) {
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<GRID&&nc>=0&&nc<GRID) toDestroy.add(`${nr},${nc}`);
+    }
   }
 
+  G.moves--;
+  await flashAndDestroy(toDestroy, G.board);
+  G.processing=false;
+  updateHUD();
+}
+
+// ══════════════════════════════════════════════
+//  GAME OVER
+// ══════════════════════════════════════════════
+function showGameOver() {
+  const won=G.score>=1500;
+  isWon=won;
+  const pct=G.score/((G.level*1500)+1500);
+  const stars=pct>=0.9?'⭐⭐⭐':pct>=0.6?'⭐⭐':'⭐';
+  document.getElementById('go-emoji').textContent=won?'🎉':'😢';
+  document.getElementById('go-stars').textContent=won?stars:'';
+  document.getElementById('go-title').textContent=won?'Level Complete!':'Out of Moves!';
+  document.getElementById('go-score').textContent=`Score: ${G.score.toLocaleString()}`;
+  document.getElementById('go-btn').textContent=won?'▶ Next Level':'🔄 Try Again';
+  document.getElementById('go-moves-btn').style.display=won?'none':'';
+  if (won) { const y=lb.find(l=>l.name==='👤 You'); if(y) y.score=Math.max(y.score,G.score); spawnConfetti(); }
   document.getElementById('game-over').classList.add('show');
 }
 
-function handleMainBtn() {
-  if (isWon) nextLevel();
-  else retryGame();
-}
-
-function nextLevel() {
-  G.level++;
-  document.getElementById('game-over').classList.remove('show');
-  startGame();
-}
-
-function retryGame() {
-  G.lives = Math.max(0, G.lives - 1);
-  document.getElementById('game-over').classList.remove('show');
-  startGame();
-}
-
+function handleMainBtn() { isWon ? nextLevel() : retryGame(); }
+function nextLevel() { G.level++; document.getElementById('game-over').classList.remove('show'); startGame(); }
+function retryGame() { G.lives=Math.max(0,G.lives-1); document.getElementById('game-over').classList.remove('show'); startGame(); }
 function buyExtraMoves() {
-  if (G.coins < 50) { alert('Not enough coins! Visit the Shop.'); return; }
-  G.coins -= 50;
-  G.moves += 5;
+  if (G.coins<50) { showToast('❌ Not enough coins!'); return; }
+  G.coins-=50; G.moves+=5;
   document.getElementById('game-over').classList.remove('show');
-  G.processing = false;
-  renderBoard(); updateHUD();
+  G.processing=false; renderBoard(); updateHUD();
 }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  SCREENS & GAME START
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id==='menu-screen') updateMenuUI();
+  if (id==='lb-screen') renderLeaderboard();
+}
+
+function startGame() {
+  if (G.lives<=0) { alert('No lives! Buy more in the Shop.'); return; }
+  G.board=createBoard(); G.score=0; G.moves=20+Math.floor(G.level/5)*2;
+  G.selected=null; G.processing=false; G.activeBooster=null;
+  document.getElementById('game-over').classList.remove('show');
+  showScreen('game-screen'); renderBoard(); updateHUD();
+}
+
+// ══════════════════════════════════════════════
 //  SHOP
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
 function buyCoins(amount, price) {
-  if (confirm(`Buy ${amount.toLocaleString()} coins for ${price}?\n(Demo mode: coins added instantly)`)) {
-    G.coins += amount;
-    document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
-    document.getElementById('menu-coins').textContent = G.coins.toLocaleString();
-    showToast(`✅ +${amount} coins added!`);
+  if (confirm(`Buy ${amount.toLocaleString()} coins for ${price}?\n(Demo: coins added instantly)`)) {
+    G.coins+=amount;
+    ['shop-coins','menu-coins'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=G.coins.toLocaleString(); });
+    showToast(`✅ +${amount.toLocaleString()} coins!`);
   }
 }
 function buyLives() {
-  if (G.coins < 50) { showToast('❌ Not enough coins!'); return; }
-  G.coins -= 50;
-  G.lives = Math.min(G.lives+3, 8);
-  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
+  if (G.coins<50) { showToast('❌ Not enough coins!'); return; }
+  G.coins-=50; G.lives=Math.min(G.lives+3,8);
+  document.getElementById('shop-coins').textContent=G.coins.toLocaleString();
   showToast('✅ +3 lives added!');
 }
-function buyBooster(type) {
-  const costs = { hammer:20, rocket:30, bomb:40 };
-  if (G.coins < costs[type]) { showToast('❌ Not enough coins!'); return; }
-  G.coins -= costs[type];
-  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
-  showToast(`✅ ${type.charAt(0).toUpperCase()+type.slice(1)} booster ready!`);
+function buyBoosterItem(type) {
+  const costs={hammer:20,rocket:30,bomb:40};
+  if (G.coins<costs[type]) { showToast('❌ Not enough coins!'); return; }
+  G.coins-=costs[type]; G.boosters[type]=(G.boosters[type]||0)+1;
+  document.getElementById('shop-coins').textContent=G.coins.toLocaleString();
+  showToast(`✅ ${type.charAt(0).toUpperCase()+type.slice(1)} added!`);
+}
+
+// ══════════════════════════════════════════════
+//  LEADERBOARD
+// ══════════════════════════════════════════════
+function renderLeaderboard() {
+  lb.sort((a,b)=>b.score-a.score);
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lb-list').innerHTML=lb.map((p,i)=>`
+    <div class="lb-row${p.name==='👤 You'?' you':''}">
+      <div class="lb-rank">${medals[i]||(i+1)}</div>
+      <div class="lb-name">${p.name}</div>
+      <div class="lb-score">${p.score.toLocaleString()}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  EFFECTS
+// ══════════════════════════════════════════════
+function showScorePopup(amount) {
+  if (amount<=0) return;
+  const boardEl=document.getElementById('board');
+  const rect=boardEl.getBoundingClientRect();
+  const p=document.createElement('div');
+  p.className='score-popup';
+  p.textContent=`+${amount.toLocaleString()}`;
+  p.style.left=(rect.left+rect.width/2-30)+'px';
+  p.style.top=(rect.top+rect.height/2-20)+'px';
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),850);
 }
 
 function showToast(msg) {
-  const t = document.createElement('div');
-  t.style.cssText = `
-    position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
-    background:linear-gradient(135deg,#3a2278,#1e1060);
-    border:1.5px solid rgba(150,100,255,0.4);
-    color:#fff; padding:12px 24px; border-radius:50px;
-    font-family:'Nunito',sans-serif; font-weight:800; font-size:15px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.5);
-    z-index:300; animation:toastIn 0.3s ease;
-    white-space:nowrap;
-  `;
-  t.textContent = msg;
-  document.head.insertAdjacentHTML('beforeend',`<style>@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}</style>`);
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#3a2278,#1e1060);border:1.5px solid rgba(150,100,255,0.4);color:#fff;padding:11px 22px;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:300;white-space:nowrap;opacity:0;transition:opacity 0.3s;`;
+  t.textContent=msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
+  setTimeout(()=>t.style.opacity='1',10);
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},2200);
 }
 
-// ════════════════════════════════════════
-//  LEADERBOARD
-// ════════════════════════════════════════
-function renderLeaderboard() {
-  leaderboard.sort((a,b) => b.score - a.score);
-  const medals = ['🥇','🥈','🥉'];
-  document.getElementById('lb-list').innerHTML = leaderboard.map((p,i) => `
-    <div class="lb-row${p.name==='👤 You'?' you':''}">
-      <div class="lb-rank">${medals[i] || (i+1)}</div>
-      <div class="lb-name">${p.name}</div>
-      <div class="lb-score">${p.score.toLocaleString()}</div>
-    </div>
-  `).join('');
-}
-
-// ════════════════════════════════════════
-//  CONFETTI
-// ════════════════════════════════════════
 function spawnConfetti() {
-  const colors = ['#FFE566','#FF6B6B','#60A5FA','#6EE7B7','#C084FC','#FFA500','#FF69B4','#00E5FF'];
-  for (let i = 0; i < 80; i++) {
-    const el = document.createElement('div');
-    el.className = 'confetti-piece';
-    const size = 6 + Math.random()*10;
-    el.style.cssText = `
-      left:${Math.random()*100}vw;
-      width:${size}px; height:${size * (0.4+Math.random()*0.6)}px;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      border-radius:${Math.random()>0.5?'50%':'2px'};
-      animation-duration:${1.5+Math.random()*2.5}s;
-      animation-delay:${Math.random()*0.8}s;
-      top:-20px;
-    `;
+  const colors=['#FFE566','#FF6B6B','#60A5FA','#6EE7B7','#C084FC','#FFA500','#FF69B4','#00E5FF'];
+  for (let i=0;i<80;i++) {
+    const el=document.createElement('div'); el.className='confetti-piece';
+    const size=6+Math.random()*10;
+    el.style.cssText=`left:${Math.random()*100}vw;width:${size}px;height:${size*(0.4+Math.random()*0.6)}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2.5}s;animation-delay:${Math.random()*0.8}s;top:-20px;`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 4500);
+    setTimeout(()=>el.remove(),4500);
   }
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  INIT
-// ════════════════════════════════════════
+// ══════════════════════════════════════════════
 updateMenuUI();
+window.addEventListener('resize', ()=>{ if(document.getElementById('game-screen').classList.contains('active')) renderBoard(); });
 </script>
 </body>
 </html>
