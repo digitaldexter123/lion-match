@@ -4,303 +4,752 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>🦁 Lion Match</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
     body {
-      background: #1a0a4e;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
+      font-family: 'Nunito', 'Segoe UI', sans-serif;
+      background: #0d0630;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       overflow-x: hidden;
+      position: relative;
     }
 
-    /* ── SCREENS ── */
-    .screen { display: none; width: 100%; max-width: 420px; padding: 16px; flex-direction: column; align-items: center; }
+    /* ── ANIMATED BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(138,43,226,0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(30,144,255,0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255,165,0,0.1) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes bgPulse {
+      from { opacity: 0.8; }
+      to { opacity: 1; }
+    }
+
+    /* Stars */
+    .stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle linear infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      padding: 12px;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+    }
     .screen.active { display: flex; }
 
     /* ── MENU ── */
-    .menu-card {
-      background: #2d1b69;
-      border-radius: 24px;
-      padding: 32px 24px;
+    .menu-top {
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      margin-top: 24px;
+      padding: 20px 0 8px;
     }
-    .lion-logo { font-size: 80px; margin-bottom: 8px; }
-    .game-title { font-size: 38px; font-weight: 900; color: #F7DC6F; letter-spacing: 2px; }
-    .game-subtitle { font-size: 15px; color: #b39ddb; margin-top: 4px; }
-    .game-tagline { font-size: 13px; color: #777; margin: 8px 0 24px; font-style: italic; }
-    .btn { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; transition: transform 0.1s, opacity 0.1s; width: 100%; margin-bottom: 12px; }
-    .btn:active { transform: scale(0.96); opacity: 0.9; }
-    .btn-play { background: #F7DC6F; color: #1a0a4e; font-size: 22px; padding: 16px; letter-spacing: 3px; }
-    .btn-shop { background: #3d2b8a; color: #F7DC6F; font-size: 16px; padding: 12px; }
-    .btn-leaderboard { background: #1e1060; color: #b39ddb; font-size: 14px; padding: 10px; }
-    .lives-row { display: flex; justify-content: center; gap: 6px; margin: 12px 0 4px; font-size: 22px; }
-    .version-text { font-size: 11px; color: #555; margin-top: 8px; }
+    .lion-castle {
+      font-size: 100px;
+      filter: drop-shadow(0 8px 24px rgba(255,200,0,0.6));
+      animation: lionFloat 3s ease-in-out infinite;
+      display: block;
+      margin: 0 auto;
+    }
+    @keyframes lionFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
 
-    /* ── GAME ── */
-    #game-screen { padding: 8px; }
-    .hud {
-      display: flex; justify-content: space-between; align-items: center;
-      width: 100%; max-width: 420px; padding: 8px 12px; margin-bottom: 4px;
+    .game-title {
+      font-size: 44px;
+      font-weight: 900;
+      color: #FFE066;
+      text-shadow:
+        0 2px 0 #B8860B,
+        0 4px 0 #8B6914,
+        0 0 30px rgba(255,220,0,0.6),
+        0 0 60px rgba(255,180,0,0.3);
+      letter-spacing: 2px;
+      margin-top: 8px;
     }
-    .hud-box { text-align: center; min-width: 80px; }
-    .hud-label { font-size: 10px; color: #7c6ba8; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-    .hud-value { font-size: 26px; font-weight: 900; color: #F7DC6F; line-height: 1; }
-    .hud-value.danger { color: #ef5350; }
-    .hud-lion { font-size: 44px; cursor: pointer; }
+    .game-subtitle {
+      font-size: 15px;
+      color: #c9b3ff;
+      margin-top: 4px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
 
-    .board-wrap {
-      background: rgba(255,255,255,0.05);
-      border-radius: 16px;
-      padding: 4px;
-      display: inline-block;
+    .menu-card {
+      background: linear-gradient(160deg, #3a2278 0%, #1e1060 100%);
+      border: 2px solid rgba(150,100,255,0.4);
+      border-radius: 28px;
+      padding: 24px 20px 28px;
+      width: 100%;
+      margin-top: 16px;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.1);
     }
-    .board { display: grid; gap: 3px; }
-    .tile {
-      width: 44px; height: 44px;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
+
+    /* Lives bar */
+    .lives-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .heart { font-size: 22px; filter: drop-shadow(0 2px 4px rgba(255,50,50,0.5)); }
+    .heart.empty { filter: grayscale(1) opacity(0.4); }
+
+    .btn {
+      border: none;
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
       cursor: pointer;
-      transition: transform 0.12s, box-shadow 0.12s;
+      width: 100%;
+      margin-bottom: 12px;
+      transition: transform 0.12s, filter 0.12s;
       position: relative;
-      border: 2px solid transparent;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50px 50px 0 0;
+      pointer-events: none;
+    }
+    .btn:active { transform: scale(0.96); filter: brightness(0.9); }
+
+    .btn-play {
+      background: linear-gradient(180deg, #FFE566 0%, #FFA500 50%, #FF8C00 100%);
+      color: #3a1a00;
+      font-size: 24px;
+      padding: 18px;
+      letter-spacing: 3px;
+      box-shadow: 0 6px 0 #cc6600, 0 8px 20px rgba(255,140,0,0.4);
+      border-bottom: 3px solid #cc6600;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .btn-play:active { transform: translateY(3px) scale(0.98); box-shadow: 0 3px 0 #cc6600; }
+
+    .btn-shop {
+      background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+      color: #fff;
+      font-size: 17px;
+      padding: 14px;
+      box-shadow: 0 5px 0 #5b21b6, 0 6px 16px rgba(124,58,237,0.4);
+      border-bottom: 3px solid #5b21b6;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+    }
+    .btn-shop:active { transform: translateY(3px) scale(0.98); box-shadow: 0 2px 0 #5b21b6; }
+
+    .btn-lb {
+      background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+      color: #fff;
+      font-size: 15px;
+      padding: 12px;
+      box-shadow: 0 4px 0 #1d4ed8, 0 5px 14px rgba(37,99,235,0.3);
+      border-bottom: 3px solid #1d4ed8;
+    }
+    .btn-lb:active { transform: translateY(3px) scale(0.98); box-shadow: 0 1px 0 #1d4ed8; }
+
+    .version-text { font-size: 11px; color: #6b5f8c; text-align: center; margin-top: 4px; }
+
+    /* ── GAME SCREEN ── */
+    #game-screen { padding: 8px; justify-content: flex-start; }
+
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 420px;
+      padding: 8px 8px 4px;
+    }
+
+    .hud-pill {
+      background: linear-gradient(160deg, #2d1b69, #1a0a4e);
+      border: 1.5px solid rgba(150,100,255,0.3);
+      border-radius: 16px;
+      padding: 8px 16px;
+      text-align: center;
+      min-width: 90px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+    .hud-label {
+      font-size: 9px;
+      color: #9d87d0;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .hud-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #FFE566;
+      line-height: 1.1;
+      text-shadow: 0 0 10px rgba(255,220,0,0.4);
+    }
+    .hud-value.danger { color: #ff6b6b; text-shadow: 0 0 10px rgba(255,80,80,0.5); animation: pulse 0.8s ease infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    .hud-lion-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 48px;
+      filter: drop-shadow(0 4px 12px rgba(255,200,0,0.5));
+      transition: transform 0.2s;
+    }
+    .hud-lion-btn:hover { transform: scale(1.1) rotate(-5deg); }
+
+    /* ── BOARD ── */
+    .board-outer {
+      background: linear-gradient(135deg, #1a0a5e 0%, #0d0630 100%);
+      border: 2px solid rgba(120,80,255,0.4);
+      border-radius: 20px;
+      padding: 8px;
+      box-shadow:
+        0 0 0 1px rgba(180,120,255,0.15),
+        0 20px 60px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      margin: 4px auto;
+    }
+    .board {
+      display: grid;
+      gap: 4px;
+    }
+
+    .tile {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.12s;
       user-select: none;
+      border: none;
+      outline: none;
+    }
+    .tile::before {
+      content: '';
+      position: absolute;
+      top: 2px; left: 4px; right: 4px;
+      height: 40%;
+      background: rgba(255,255,255,0.25);
+      border-radius: 8px 8px 50% 50%;
+      pointer-events: none;
+    }
+    .tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      pointer-events: none;
     }
     .tile:hover { transform: scale(1.08); }
     .tile.selected {
-      border-color: #F7DC6F;
-      transform: scale(1.12);
-      box-shadow: 0 0 12px #F7DC6F88;
+      transform: scale(1.15) translateY(-3px);
+      box-shadow: 0 0 0 3px #FFE566, 0 0 20px rgba(255,230,0,0.6), 0 8px 16px rgba(0,0,0,0.5);
+      z-index: 2;
+      animation: selectedBob 0.4s ease;
     }
-    .tile.exploding { animation: pop 0.25s ease-out forwards; }
-    @keyframes pop {
+    @keyframes selectedBob {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2) translateY(-5px); }
+      100% { transform: scale(1.15) translateY(-3px); }
+    }
+    .tile.exploding { animation: tileExplode 0.3s ease-out forwards; }
+    @keyframes tileExplode {
       0% { transform: scale(1.2); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.7; }
       100% { transform: scale(0); opacity: 0; }
     }
-    .tile.falling { animation: fall 0.18s ease-in; }
-    @keyframes fall {
-      from { transform: translateY(-20px); opacity: 0.6; }
-      to { transform: translateY(0); opacity: 1; }
+    .tile.falling { animation: tileFall 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes tileFall {
+      from { transform: translateY(-30px) scale(0.8); opacity: 0.5; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .tile.invalid { animation: tileShake 0.3s ease; }
+    @keyframes tileShake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
     }
 
-    .bottom-bar { margin-top: 10px; text-align: center; width: 100%; max-width: 420px; padding: 0 12px; }
-    .hint-text { color: #b39ddb; font-size: 14px; margin-bottom: 6px; }
-    .coins-bar { color: #F7DC6F; font-size: 16px; font-weight: 700; }
+    /* Gem colors with gradients */
+    .gem-ruby     { background: linear-gradient(145deg, #ff6b8a, #e5173f, #a00020); box-shadow: 0 4px 12px rgba(220,30,60,0.5); }
+    .gem-sapphire { background: linear-gradient(145deg, #60a5fa, #1d6ff0, #1040b0); box-shadow: 0 4px 12px rgba(30,100,240,0.5); }
+    .gem-emerald  { background: linear-gradient(145deg, #6ee7b7, #10b981, #047857); box-shadow: 0 4px 12px rgba(20,170,110,0.5); }
+    .gem-topaz    { background: linear-gradient(145deg, #fde68a, #f59e0b, #b45309); box-shadow: 0 4px 12px rgba(240,160,20,0.5); }
+    .gem-amethyst { background: linear-gradient(145deg, #c084fc, #9333ea, #6b21a8); box-shadow: 0 4px 12px rgba(150,50,230,0.5); }
+    .gem-diamond  { background: linear-gradient(145deg, #f0f9ff, #bae6fd, #7dd3fc); box-shadow: 0 4px 12px rgba(150,210,255,0.5); }
 
-    .game-over-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-      display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      margin-top: 10px;
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      padding: 0 12px;
     }
-    .game-over-overlay.show { display: flex; }
-    .game-over-card {
-      background: #2d1b69; border-radius: 24px; padding: 32px 24px;
-      width: 90%; max-width: 360px; text-align: center;
-      animation: slideUp 0.3s ease;
+    .hint-text {
+      color: #c4b5fd;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
     }
-    @keyframes slideUp {
-      from { transform: translateY(60px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .coins-bar {
+      display: inline-block;
+      background: linear-gradient(135deg, #3b2070, #1e1060);
+      border: 1.5px solid rgba(255,200,0,0.3);
+      border-radius: 20px;
+      padding: 6px 18px;
+      color: #FFE566;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
     }
-    .game-over-title { font-size: 32px; font-weight: 900; color: #F7DC6F; margin-bottom: 8px; }
-    .game-over-score { font-size: 20px; color: #b39ddb; margin-bottom: 20px; }
-    .stars { font-size: 36px; margin-bottom: 16px; }
-    .btn-retry { background: #ef5350; color: #fff; font-size: 18px; padding: 14px; }
-    .btn-coins-move { background: #F7DC6F; color: #1a0a4e; font-size: 15px; padding: 12px; }
+
+    /* ── GAME OVER OVERLAY ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(5,2,20,0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .overlay.show { display: flex; }
+
+    .result-card {
+      background: linear-gradient(160deg, #3a2278 0%, #1a0a5e 100%);
+      border: 2px solid rgba(160,120,255,0.5);
+      border-radius: 28px;
+      padding: 32px 24px;
+      width: 90%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: cardPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes cardPop {
+      from { transform: scale(0.6) translateY(60px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .result-emoji { font-size: 70px; display: block; margin-bottom: 8px; animation: resultBounce 0.6s 0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+    @keyframes resultBounce {
+      from { transform: scale(0) rotate(-20deg); }
+      to { transform: scale(1) rotate(0deg); }
+    }
+    .result-title { font-size: 30px; font-weight: 900; color: #FFE566; margin-bottom: 4px; text-shadow: 0 2px 10px rgba(255,200,0,0.4); }
+    .result-score { font-size: 18px; color: #c4b5fd; margin-bottom: 20px; }
+    .result-stars { font-size: 42px; margin-bottom: 16px; letter-spacing: 4px; }
+
+    .btn-result-main {
+      background: linear-gradient(180deg, #FFE566, #FFA500, #FF8C00);
+      color: #3a1a00;
+      font-size: 19px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 5px 0 #cc6600, 0 6px 16px rgba(255,140,0,0.3);
+    }
+    .btn-result-main:active { transform: translateY(3px); box-shadow: 0 2px 0 #cc6600; }
+    .btn-result-alt {
+      background: linear-gradient(180deg, #a78bfa, #7c3aed);
+      color: #fff;
+      font-size: 15px;
+      padding: 13px;
+      box-shadow: 0 4px 0 #5b21b6;
+    }
 
     /* ── SHOP ── */
-    .shop-card { background: #2d1b69; border-radius: 24px; padding: 24px; width: 100%; margin-top: 16px; }
-    .shop-title { font-size: 28px; font-weight: 900; color: #F7DC6F; margin-bottom: 4px; text-align: center; }
-    .coins-display { color: #b39ddb; font-size: 16px; margin-bottom: 20px; text-align: center; }
-    .shop-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #3d2b8a; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
-      cursor: pointer; transition: transform 0.1s;
+    .page-header {
+      text-align: center;
+      padding: 20px 0 12px;
+      width: 100%;
     }
-    .shop-item:hover { transform: scale(1.02); }
-    .shop-item-label { font-size: 16px; font-weight: 600; }
-    .shop-item-price { font-size: 16px; color: #F7DC6F; font-weight: 700; }
-    .btn-back { background: transparent; color: #b39ddb; font-size: 16px; padding: 12px; border: 1px solid #3d2b8a; margin-top: 8px; }
+    .page-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #FFE566;
+      text-shadow: 0 2px 0 #B8860B, 0 0 20px rgba(255,200,0,0.4);
+    }
+    .page-subtitle { font-size: 15px; color: #c4b5fd; margin-top: 4px; }
+
+    .shop-grid {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .shop-item {
+      background: linear-gradient(135deg, #2d1b69, #1e1060);
+      border: 1.5px solid rgba(150,100,255,0.25);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .shop-item::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+    .shop-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+    .shop-item:active { transform: scale(0.97); }
+
+    .shop-icon { font-size: 36px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); flex-shrink: 0; }
+    .shop-info { flex: 1; }
+    .shop-name { font-size: 16px; font-weight: 800; color: #fff; }
+    .shop-desc { font-size: 12px; color: #9d87d0; margin-top: 2px; }
+    .shop-price {
+      background: linear-gradient(180deg, #FFE566, #FFA500);
+      color: #3a1a00;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(255,140,0,0.4);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge {
+      position: absolute;
+      top: -1px; right: -1px;
+      background: linear-gradient(135deg, #ff6b6b, #ee0979);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 10px;
+      border-radius: 0 16px 0 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1.5px solid rgba(150,100,255,0.3);
+      color: #9d87d0;
+      font-size: 15px;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { background: rgba(150,100,255,0.1); color: #c4b5fd; }
 
     /* ── LEADERBOARD ── */
-    .lb-card { background: #2d1b69; border-radius: 24px; padding: 24px; width: 100%; margin-top: 16px; }
-    .lb-title { font-size: 24px; font-weight: 900; color: #F7DC6F; margin-bottom: 16px; text-align: center; }
+    .lb-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
     .lb-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px; border-radius: 12px; margin-bottom: 8px;
-      background: #3d2b8a;
+      background: linear-gradient(135deg, #2d1b69, #1e1060);
+      border: 1.5px solid rgba(150,100,255,0.2);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
     }
-    .lb-rank { font-size: 20px; min-width: 36px; text-align: center; }
-    .lb-name { flex: 1; font-size: 15px; font-weight: 600; }
-    .lb-score { font-size: 15px; color: #F7DC6F; font-weight: 700; }
+    .lb-row.you {
+      border-color: rgba(255,220,0,0.4);
+      background: linear-gradient(135deg, #3d2a00, #2a1a00);
+      box-shadow: 0 3px 12px rgba(255,200,0,0.2);
+    }
+    .lb-rank { font-size: 22px; min-width: 40px; text-align: center; }
+    .lb-name { flex: 1; font-size: 15px; font-weight: 800; color: #fff; }
+    .lb-score { font-size: 15px; font-weight: 900; color: #FFE566; }
 
     /* ── CONFETTI ── */
     .confetti-piece {
       position: fixed;
-      width: 10px; height: 10px;
-      border-radius: 2px;
+      border-radius: 3px;
       animation: confettiFall linear forwards;
       pointer-events: none;
+      z-index: 200;
     }
     @keyframes confettiFall {
-      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+      0% { transform: translateY(-20px) rotate(0deg) scaleX(1); opacity: 1; }
+      50% { scaleX(-1); }
+      100% { transform: translateY(110vh) rotate(720deg) scaleX(-1); opacity: 0; }
+    }
+
+    /* ── SCORE POPUP ── */
+    .score-popup {
+      position: fixed;
+      pointer-events: none;
+      font-size: 24px;
+      font-weight: 900;
+      color: #FFE566;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      animation: scoreFloat 0.8s ease-out forwards;
+      z-index: 50;
+      font-family: 'Nunito', sans-serif;
+    }
+    @keyframes scoreFloat {
+      0% { transform: translateY(0) scale(0.5); opacity: 1; }
+      100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
     }
 
     @media (max-width: 380px) {
-      .tile { width: 38px; height: 38px; font-size: 19px; }
+      .tile { width: 38px; height: 38px; font-size: 17px; }
+      .game-title { font-size: 36px; }
+    }
+    @media (max-width: 340px) {
+      .tile { width: 34px; height: 34px; font-size: 15px; }
     }
   </style>
 </head>
 <body>
 
-<!-- MENU -->
+<!-- Background stars -->
+<div class="stars" id="stars"></div>
+
+<!-- ══ MENU ══ -->
 <div id="menu-screen" class="screen active">
-  <div class="menu-card">
-    <div class="lion-logo">🦁</div>
+  <div class="menu-top">
+    <span class="lion-castle">🦁</span>
     <div class="game-title">Lion Match</div>
     <div class="game-subtitle">Match-3 Puzzle Adventure</div>
-    <div class="game-tagline">Swipe gems. Beat levels. Roar!</div>
-    <button class="btn btn-play" onclick="startGame()">▶ PLAY</button>
-    <button class="btn btn-shop" onclick="showScreen('shop-screen')">🪙 Shop — <span id="menu-coins">100</span> Coins</button>
-    <button class="btn btn-leaderboard" onclick="showScreen('lb-screen')">🏆 Leaderboard</button>
+  </div>
+
+  <div class="menu-card">
     <div class="lives-row" id="lives-display"></div>
-    <div class="version-text">Level <span id="menu-level">1</span> • Free to Play • No Ads</div>
+    <button class="btn btn-play" onclick="startGame()">▶ &nbsp;PLAY</button>
+    <button class="btn btn-shop" onclick="showScreen('shop-screen')">🪙 &nbsp;Shop &nbsp;·&nbsp; <span id="menu-coins">100</span> Coins</button>
+    <button class="btn btn-lb" onclick="showScreen('lb-screen')">🏆 &nbsp;Leaderboard</button>
+    <div class="version-text">Level <span id="menu-level">1</span> &nbsp;·&nbsp; Free to Play &nbsp;·&nbsp; No Ads</div>
   </div>
 </div>
 
-<!-- GAME -->
+<!-- ══ GAME ══ -->
 <div id="game-screen" class="screen">
   <div class="hud">
-    <div class="hud-box">
-      <div class="hud-label">SCORE</div>
+    <div class="hud-pill">
+      <div class="hud-label">Score</div>
       <div class="hud-value" id="hud-score">0</div>
     </div>
-    <div class="hud-lion" onclick="showScreen('menu-screen')">🦁</div>
-    <div class="hud-box">
-      <div class="hud-label">MOVES</div>
+    <button class="hud-lion-btn" onclick="showScreen('menu-screen')">🦁</button>
+    <div class="hud-pill">
+      <div class="hud-label">Moves</div>
       <div class="hud-value" id="hud-moves">20</div>
     </div>
   </div>
-  <div class="board-wrap">
+
+  <div class="board-outer">
     <div class="board" id="board"></div>
   </div>
+
   <div class="bottom-bar">
     <div class="hint-text" id="hint-text">Tap a gem to select it</div>
-    <div class="coins-bar">🪙 <span id="game-coins">100</span> coins</div>
+    <div class="coins-bar">🪙 <span id="game-coins">100</span></div>
   </div>
 </div>
 
-<!-- SHOP -->
+<!-- ══ SHOP ══ -->
 <div id="shop-screen" class="screen">
-  <div class="shop-card">
-    <div class="shop-title">🪙 Shop</div>
-    <div class="coins-display">Your Coins: <span id="shop-coins">100</span></div>
+  <div class="page-header">
+    <div class="page-title">🪙 Shop</div>
+    <div class="page-subtitle">Coins: <span id="shop-coins">100</span></div>
+  </div>
+  <div class="shop-grid">
     <div class="shop-item" onclick="buyCoins(100,'$0.99')">
-      <span class="shop-item-label">🪙 100 Coins</span>
-      <span class="shop-item-price">$0.99</span>
+      <span class="shop-icon">🪙</span>
+      <div class="shop-info">
+        <div class="shop-name">Starter Coins</div>
+        <div class="shop-desc">100 coins to get started</div>
+      </div>
+      <div class="shop-price">$0.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(500,'$2.99')">
-      <span class="shop-item-label">🪙 500 Coins</span>
-      <span class="shop-item-price">$2.99</span>
+      <span class="badge">POPULAR</span>
+      <span class="shop-icon">💰</span>
+      <div class="shop-info">
+        <div class="shop-name">Coin Bundle</div>
+        <div class="shop-desc">500 coins — great value!</div>
+      </div>
+      <div class="shop-price">$2.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(1200,'$9.99')">
-      <span class="shop-item-label">🪙 1,200 Coins <span style="font-size:11px;color:#F7DC6F;background:#1a0a4e;padding:2px 6px;border-radius:8px;margin-left:6px">POPULAR</span></span>
-      <span class="shop-item-price">$9.99</span>
+      <span class="shop-icon">💎</span>
+      <div class="shop-info">
+        <div class="shop-name">Mega Bundle</div>
+        <div class="shop-desc">1,200 coins — best deal</div>
+      </div>
+      <div class="shop-price">$9.99</div>
     </div>
     <div class="shop-item" onclick="buyCoins(2500,'$19.99')">
-      <span class="shop-item-label">🪙 2,500 Coins</span>
-      <span class="shop-item-price">$19.99</span>
+      <span class="badge">BEST VALUE</span>
+      <span class="shop-icon">👑</span>
+      <div class="shop-info">
+        <div class="shop-name">Royal Bundle</div>
+        <div class="shop-desc">2,500 coins — ultimate pack</div>
+      </div>
+      <div class="shop-price">$19.99</div>
     </div>
     <div class="shop-item" onclick="buyLives()">
-      <span class="shop-item-label">❤️ +3 Lives</span>
-      <span class="shop-item-price">50 🪙</span>
+      <span class="shop-icon">❤️</span>
+      <div class="shop-info">
+        <div class="shop-name">+3 Lives</div>
+        <div class="shop-desc">Keep playing without waiting</div>
+      </div>
+      <div class="shop-price">50 🪙</div>
     </div>
     <div class="shop-item" onclick="buyBooster('hammer')">
-      <span class="shop-item-label">🔨 Hammer (remove 1 tile)</span>
-      <span class="shop-item-price">20 🪙</span>
+      <span class="shop-icon">🔨</span>
+      <div class="shop-info">
+        <div class="shop-name">Hammer</div>
+        <div class="shop-desc">Remove any single tile</div>
+      </div>
+      <div class="shop-price">20 🪙</div>
     </div>
     <div class="shop-item" onclick="buyBooster('rocket')">
-      <span class="shop-item-label">🚀 Rocket (clear row)</span>
-      <span class="shop-item-price">30 🪙</span>
+      <span class="shop-icon">🚀</span>
+      <div class="shop-info">
+        <div class="shop-name">Rocket</div>
+        <div class="shop-desc">Clears an entire row</div>
+      </div>
+      <div class="shop-price">30 🪙</div>
     </div>
     <div class="shop-item" onclick="buyBooster('bomb')">
-      <span class="shop-item-label">💣 Bomb (3×3 area)</span>
-      <span class="shop-item-price">40 🪙</span>
+      <span class="shop-icon">💣</span>
+      <div class="shop-info">
+        <div class="shop-name">Bomb</div>
+        <div class="shop-desc">Destroys a 3×3 area</div>
+      </div>
+      <div class="shop-price">40 🪙</div>
     </div>
-    <button class="btn btn-back" onclick="showScreen('menu-screen')">← Back to Menu</button>
   </div>
+  <button class="btn-back" onclick="showScreen('menu-screen')">← Back to Menu</button>
 </div>
 
-<!-- LEADERBOARD -->
+<!-- ══ LEADERBOARD ══ -->
 <div id="lb-screen" class="screen">
-  <div class="lb-card">
-    <div class="lb-title">🏆 Leaderboard</div>
-    <div id="lb-list"></div>
-    <button class="btn btn-back" onclick="showScreen('menu-screen')" style="margin-top:16px">← Back</button>
+  <div class="page-header">
+    <div class="page-title">🏆 Leaderboard</div>
+    <div class="page-subtitle">Global Rankings</div>
   </div>
+  <div class="lb-list" id="lb-list"></div>
+  <button class="btn-back" onclick="showScreen('menu-screen')" style="margin-top:16px">← Back</button>
 </div>
 
-<!-- GAME OVER OVERLAY -->
-<div class="game-over-overlay" id="game-over">
-  <div class="game-over-card">
-    <div class="stars" id="go-stars">⭐⭐⭐</div>
-    <div class="game-over-title" id="go-title">Level Complete!</div>
-    <div class="game-over-score" id="go-score">Score: 0</div>
-    <button class="btn btn-retry" id="go-btn" onclick="retryGame()" style="margin-bottom:10px">🔄 Try Again</button>
-    <button class="btn btn-coins-move" id="go-moves-btn" onclick="buyExtraMoves()" style="display:none">🪙 +5 Moves (50 coins)</button>
+<!-- ══ GAME OVER ══ -->
+<div class="overlay" id="game-over">
+  <div class="result-card">
+    <span class="result-emoji" id="go-emoji">🎉</span>
+    <div class="result-stars" id="go-stars">⭐⭐⭐</div>
+    <div class="result-title" id="go-title">Level Complete!</div>
+    <div class="result-score" id="go-score">Score: 0</div>
+    <button class="btn btn-result-main" id="go-btn" onclick="handleMainBtn()"></button>
+    <button class="btn btn-result-alt" id="go-moves-btn" onclick="buyExtraMoves()" style="display:none">🪙 +5 Moves (50 coins)</button>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════
+//  STARS
+// ════════════════════════════════════════
+(function() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      animation-duration:${2+Math.random()*4}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(s);
+  }
+})();
+
+// ════════════════════════════════════════
 //  GAME STATE
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════
 const GRID = 8;
 const GEMS = [
-  { emoji: '🔴', color: '#E53935', name: 'ruby' },
-  { emoji: '🔵', color: '#1E88E5', name: 'sapphire' },
-  { emoji: '🟢', color: '#43A047', name: 'emerald' },
-  { emoji: '🟡', color: '#FDD835', name: 'topaz' },
-  { emoji: '🟣', color: '#8E24AA', name: 'amethyst' },
-  { emoji: '⚪', color: '#90A4AE', name: 'diamond' },
+  { name:'ruby',     cls:'gem-ruby',     emoji:'💎', label:'🔴' },
+  { name:'sapphire', cls:'gem-sapphire', emoji:'💠', label:'🔵' },
+  { name:'emerald',  cls:'gem-emerald',  emoji:'💚', label:'🟢' },
+  { name:'topaz',    cls:'gem-topaz',    emoji:'⭐', label:'🟡' },
+  { name:'amethyst', cls:'gem-amethyst', emoji:'🔮', label:'🟣' },
+  { name:'diamond',  cls:'gem-diamond',  emoji:'🌟', label:'⚪' },
 ];
 
-let state = {
-  board: [],
-  score: 0,
-  moves: 20,
-  selected: null,
-  coins: 100,
-  lives: 5,
-  level: 1,
-  processing: false,
+let G = {
+  board: [], score: 0, moves: 20, selected: null,
+  coins: 100, lives: 5, level: 1, processing: false
 };
 
 let leaderboard = [
-  { name: '🦁 LionKing99', score: 48200 },
-  { name: '🐯 TigerPaw', score: 41500 },
-  { name: '🐺 WolfMatch', score: 38900 },
-  { name: '🦊 FoxPuzzle', score: 31200 },
-  { name: '🐻 BearGems', score: 27800 },
-  { name: '👤 You', score: 0 },
+  { name: '🦁 LionKing99',  score: 48200 },
+  { name: '🐯 TigerPaw',    score: 41500 },
+  { name: '🐺 WolfMatch',   score: 38900 },
+  { name: '🦊 FoxPuzzle',   score: 31200 },
+  { name: '🐻 BearGems',    score: 27800 },
+  { name: '👤 You',         score: 0 },
 ];
 
-// ══════════════════════════════════════════════
-//  BOARD LOGIC
-// ══════════════════════════════════════════════
 let tileId = 0;
-
-function randomGem(numGems = 6) {
-  return Math.floor(Math.random() * numGems);
-}
+function newTile(gem) { return { gem, id: ++tileId, isNew: false }; }
+function randomGem() { return Math.floor(Math.random() * 6); }
 
 function createBoard() {
   const b = [];
@@ -311,34 +760,37 @@ function createBoard() {
       while (
         (c >= 2 && b[r][c-1]?.gem === g && b[r][c-2]?.gem === g) ||
         (r >= 2 && b[r-1]?.[c]?.gem === g && b[r-2]?.[c]?.gem === g)
-      ) { g = randomGem(); }
-      b[r][c] = { gem: g, id: ++tileId };
+      ) g = randomGem();
+      b[r][c] = newTile(g);
     }
   }
   return b;
 }
 
+// ════════════════════════════════════════
+//  MATCH LOGIC
+// ════════════════════════════════════════
 function findMatches(board) {
   const matched = new Set();
-  // Horizontal
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID - 2; c++) {
       const g = board[r][c]?.gem;
-      if (g !== undefined && board[r][c+1]?.gem === g && board[r][c+2]?.gem === g) {
-        let end = c + 2;
-        while (end + 1 < GRID && board[r][end+1]?.gem === g) end++;
-        for (let k = c; k <= end; k++) matched.add(`${r},${k}`);
+      if (g === undefined) continue;
+      if (board[r][c+1]?.gem === g && board[r][c+2]?.gem === g) {
+        let e = c+2;
+        while (e+1 < GRID && board[r][e+1]?.gem === g) e++;
+        for (let k=c; k<=e; k++) matched.add(`${r},${k}`);
       }
     }
   }
-  // Vertical
   for (let c = 0; c < GRID; c++) {
     for (let r = 0; r < GRID - 2; r++) {
       const g = board[r][c]?.gem;
-      if (g !== undefined && board[r+1]?.[c]?.gem === g && board[r+2]?.[c]?.gem === g) {
-        let end = r + 2;
-        while (end + 1 < GRID && board[end+1]?.[c]?.gem === g) end++;
-        for (let k = r; k <= end; k++) matched.add(`${k},${c}`);
+      if (g === undefined) continue;
+      if (board[r+1]?.[c]?.gem === g && board[r+2]?.[c]?.gem === g) {
+        let e = r+2;
+        while (e+1 < GRID && board[e+1]?.[c]?.gem === g) e++;
+        for (let k=r; k<=e; k++) matched.add(`${k},${c}`);
       }
     }
   }
@@ -346,7 +798,7 @@ function findMatches(board) {
 }
 
 function removeMatches(board, matched) {
-  const b = board.map(r => r.map(t => t ? {...t} : null));
+  const b = board.map(row => row.map(t => t ? {...t} : null));
   for (const key of matched) {
     const [r, c] = key.split(',').map(Number);
     b[r][c] = null;
@@ -355,10 +807,10 @@ function removeMatches(board, matched) {
 }
 
 function dropTiles(board) {
-  const b = board.map(r => r.map(t => t ? {...t} : null));
+  const b = board.map(row => row.map(t => t ? {...t} : null));
   for (let c = 0; c < GRID; c++) {
-    let empty = GRID - 1;
-    for (let r = GRID - 1; r >= 0; r--) {
+    let empty = GRID-1;
+    for (let r = GRID-1; r >= 0; r--) {
       if (b[r][c] !== null) {
         if (r !== empty) { b[empty][c] = b[r][c]; b[r][c] = null; }
         empty--;
@@ -369,242 +821,289 @@ function dropTiles(board) {
 }
 
 function fillBoard(board) {
-  const b = board.map(r => r.map(t => t ? {...t} : null));
+  const b = board.map(row => row.map(t => t ? {...t} : null));
   for (let r = 0; r < GRID; r++)
     for (let c = 0; c < GRID; c++)
-      if (!b[r][c]) b[r][c] = { gem: randomGem(), id: ++tileId, isNew: true };
+      if (!b[r][c]) b[r][c] = { ...newTile(randomGem()), isNew: true };
   return b;
 }
 
 function calcScore(matchSize) {
-  if (matchSize >= 5) return matchSize * 80;
-  if (matchSize === 4) return matchSize * 50;
-  return matchSize * 30;
+  return matchSize >= 5 ? matchSize * 80 : matchSize === 4 ? matchSize * 50 : matchSize * 30;
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════
 //  RENDER
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════
 function renderBoard(animateNew = false) {
   const el = document.getElementById('board');
-  el.style.gridTemplateColumns = `repeat(${GRID}, 44px)`;
+  const tileSize = Math.min(42, Math.floor((Math.min(window.innerWidth, 420) - 40) / GRID));
+  el.style.gridTemplateColumns = `repeat(${GRID}, ${tileSize}px)`;
   el.innerHTML = '';
+
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID; c++) {
-      const tile = state.board[r][c];
+      const tile = G.board[r][c];
       const div = document.createElement('div');
-      div.className = 'tile' + (state.selected?.r === r && state.selected?.c === c ? ' selected' : '');
+      div.className = 'tile';
+      div.style.width = div.style.height = tileSize + 'px';
+      div.style.fontSize = Math.floor(tileSize * 0.48) + 'px';
+      div.style.borderRadius = Math.floor(tileSize * 0.28) + 'px';
+
       if (tile) {
-        div.style.background = GEMS[tile.gem].color;
-        div.textContent = GEMS[tile.gem].emoji;
+        const gem = GEMS[tile.gem];
+        div.classList.add(gem.cls);
+        div.textContent = gem.emoji;
+        if (G.selected?.r === r && G.selected?.c === c) div.classList.add('selected');
         if (animateNew && tile.isNew) div.classList.add('falling');
+        div.addEventListener('click', () => handleTileClick(r, c));
       } else {
-        div.style.background = '#111';
+        div.style.background = 'rgba(0,0,0,0.2)';
         div.style.cursor = 'default';
       }
-      div.addEventListener('click', () => handleTileClick(r, c));
       el.appendChild(div);
     }
   }
 }
 
 function updateHUD() {
-  document.getElementById('hud-score').textContent = state.score;
+  document.getElementById('hud-score').textContent = G.score.toLocaleString();
   const movesEl = document.getElementById('hud-moves');
-  movesEl.textContent = state.moves;
-  movesEl.className = 'hud-value' + (state.moves <= 5 ? ' danger' : '');
+  movesEl.textContent = G.moves;
+  movesEl.className = 'hud-value' + (G.moves <= 5 ? ' danger' : '');
   document.getElementById('hint-text').textContent =
-    state.selected ? '✨ Now tap an adjacent gem' : 'Tap a gem to select it';
-  document.getElementById('game-coins').textContent = state.coins;
+    G.selected ? '✨ Now tap an adjacent gem!' : 'Tap a gem to select it';
+  document.getElementById('game-coins').textContent = G.coins.toLocaleString();
 }
 
 function updateMenuUI() {
-  document.getElementById('menu-coins').textContent = state.coins;
-  document.getElementById('menu-level').textContent = state.level;
-  document.getElementById('shop-coins').textContent = state.coins;
+  document.getElementById('menu-coins').textContent = G.coins.toLocaleString();
+  document.getElementById('menu-level').textContent = G.level;
+  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
   const livesEl = document.getElementById('lives-display');
-  livesEl.innerHTML = Array.from({ length: 5 }, (_, i) => i < state.lives ? '❤️' : '🖤').join('');
+  livesEl.innerHTML = Array.from({length:5}, (_,i) =>
+    `<span class="heart${i < G.lives ? '' : ' empty'}">❤️</span>`
+  ).join('');
 }
 
-// ══════════════════════════════════════════════
-//  GAME LOGIC
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════
+//  SCREENS
+// ════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'menu-screen') updateMenuUI();
   if (id === 'lb-screen') renderLeaderboard();
-  if (id === 'shop-screen') document.getElementById('shop-coins').textContent = state.coins;
 }
 
 function startGame() {
-  if (state.lives <= 0) { alert('No lives left! Buy more in the Shop.'); return; }
-  state.board = createBoard();
-  state.score = 0;
-  state.moves = 20;
-  state.selected = null;
-  state.processing = false;
+  if (G.lives <= 0) { alert('No lives! Buy more in the Shop.'); return; }
+  G.board = createBoard();
+  G.score = 0;
+  G.moves = 20 + Math.floor(G.level / 5) * 2;
+  G.selected = null;
+  G.processing = false;
   document.getElementById('game-over').classList.remove('show');
   showScreen('game-screen');
   renderBoard();
   updateHUD();
 }
 
-function retryGame() {
-  document.getElementById('game-over').classList.remove('show');
-  state.lives = Math.max(0, state.lives - 1);
-  startGame();
-}
+// ════════════════════════════════════════
+//  GAME LOGIC
+// ════════════════════════════════════════
+let isWon = false;
 
 async function handleTileClick(r, c) {
-  if (state.processing || !state.board[r][c]) return;
+  if (G.processing || !G.board[r][c] || G.moves <= 0) return;
 
-  if (!state.selected) {
-    state.selected = { r, c };
-    renderBoard();
-    updateHUD();
+  if (!G.selected) {
+    G.selected = { r, c };
+    renderBoard(); updateHUD();
     return;
   }
 
-  const { r: sr, c: sc } = state.selected;
-  const dr = Math.abs(sr - r), dc = Math.abs(sc - c);
-  const adjacent = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+  const { r: sr, c: sc } = G.selected;
+  const dr = Math.abs(sr-r), dc = Math.abs(sc-c);
+  const adjacent = (dr===1&&dc===0)||(dr===0&&dc===1);
 
   if (!adjacent) {
-    state.selected = { r, c };
-    renderBoard();
+    G.selected = { r, c };
+    renderBoard(); updateHUD();
     return;
   }
 
-  state.selected = null;
-  state.processing = true;
+  G.selected = null;
+  G.processing = true;
 
-  // Try swap
-  const nb = state.board.map(row => [...row]);
+  // Swap
+  const nb = G.board.map(row => [...row]);
   [nb[sr][sc], nb[r][c]] = [nb[r][c], nb[sr][sc]];
 
   const matches = findMatches(nb);
   if (matches.size === 0) {
-    // Invalid move - flash and revert
-    state.processing = false;
-    renderBoard();
-    updateHUD();
+    // Invalid - shake tiles
+    const boardEl = document.getElementById('board');
+    [boardEl.children[sr*GRID+sc], boardEl.children[r*GRID+c]].forEach(el => {
+      if (el) { el.classList.add('invalid'); setTimeout(()=>el.classList.remove('invalid'),300); }
+    });
+    G.processing = false;
+    G.selected = null;
+    renderBoard(); updateHUD();
     return;
   }
 
-  state.moves--;
-  state.board = nb;
+  G.moves--;
+  G.board = nb;
   await processMatches();
 }
 
 async function processMatches() {
   let found = true;
   while (found) {
-    const matches = findMatches(state.board);
+    const matches = findMatches(G.board);
     if (matches.size === 0) { found = false; break; }
 
-    // Flash matched tiles
+    // Flash
     const boardEl = document.getElementById('board');
-    const cells = boardEl.children;
     for (const key of matches) {
-      const [r, c] = key.split(',').map(Number);
-      cells[r * GRID + c].classList.add('exploding');
+      const [r,c] = key.split(',').map(Number);
+      const el = boardEl.children[r*GRID+c];
+      if (el) el.classList.add('exploding');
     }
-    await sleep(220);
 
-    state.score += calcScore(matches.size);
-    state.board = removeMatches(state.board, matches);
-    state.board = dropTiles(state.board);
-    state.board = fillBoard(state.board);
+    // Score popup
+    const scoreGain = calcScore(matches.size);
+    showScorePopup(scoreGain);
+    await sleep(250);
+
+    G.score += scoreGain;
+    G.board = removeMatches(G.board, matches);
+    G.board = dropTiles(G.board);
+    G.board = fillBoard(G.board);
 
     renderBoard(true);
     updateHUD();
-    await sleep(200);
+    await sleep(220);
   }
 
-  state.processing = false;
+  G.processing = false;
   updateHUD();
+  if (G.moves <= 0) showGameOver();
+}
 
-  if (state.moves <= 0) showGameOver();
+function showScorePopup(amount) {
+  const boardEl = document.getElementById('board');
+  const rect = boardEl.getBoundingClientRect();
+  const popup = document.createElement('div');
+  popup.className = 'score-popup';
+  popup.textContent = `+${amount}`;
+  popup.style.left = (rect.left + rect.width/2 - 30) + 'px';
+  popup.style.top = (rect.top + rect.height/2) + 'px';
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 800);
 }
 
 function showGameOver() {
-  const pct = state.score / 3000;
-  const stars = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.6 ? '⭐⭐' : '⭐';
-  const won = state.score >= 1500;
+  const pct = G.score / (G.level * 1500 + 1500);
+  const won = G.score >= 1500;
+  isWon = won;
 
-  document.getElementById('go-stars').textContent = stars;
-  document.getElementById('go-title').textContent = won ? '🎉 Level Complete!' : '😢 Out of Moves!';
-  document.getElementById('go-score').textContent = `Score: ${state.score.toLocaleString()}`;
+  const stars = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.6 ? '⭐⭐' : '⭐';
+  document.getElementById('go-emoji').textContent = won ? '🎉' : '😢';
+  document.getElementById('go-stars').textContent = won ? stars : '';
+  document.getElementById('go-title').textContent = won ? 'Level Complete!' : 'Out of Moves!';
+  document.getElementById('go-score').textContent = `Score: ${G.score.toLocaleString()}`;
   document.getElementById('go-btn').textContent = won ? '▶ Next Level' : '🔄 Try Again';
-  document.getElementById('go-btn').onclick = won ? nextLevel : retryGame;
   document.getElementById('go-moves-btn').style.display = won ? 'none' : '';
 
   if (won) {
-    // Update leaderboard
-    leaderboard.find(l => l.name === '👤 You').score = Math.max(
-      leaderboard.find(l => l.name === '👤 You').score, state.score
-    );
+    const youEntry = leaderboard.find(l => l.name === '👤 You');
+    if (youEntry) youEntry.score = Math.max(youEntry.score, G.score);
     spawnConfetti();
   }
 
   document.getElementById('game-over').classList.add('show');
 }
 
+function handleMainBtn() {
+  if (isWon) nextLevel();
+  else retryGame();
+}
+
 function nextLevel() {
-  state.level++;
-  state.moves = 20 + Math.floor(state.level / 5) * 2;
+  G.level++;
   document.getElementById('game-over').classList.remove('show');
-  state.board = createBoard();
-  state.score = 0;
-  state.selected = null;
-  state.processing = false;
-  renderBoard();
-  updateHUD();
+  startGame();
+}
+
+function retryGame() {
+  G.lives = Math.max(0, G.lives - 1);
+  document.getElementById('game-over').classList.remove('show');
+  startGame();
 }
 
 function buyExtraMoves() {
-  if (state.coins < 50) { alert('Not enough coins! Visit the Shop.'); return; }
-  state.coins -= 50;
-  state.moves += 5;
+  if (G.coins < 50) { alert('Not enough coins! Visit the Shop.'); return; }
+  G.coins -= 50;
+  G.moves += 5;
   document.getElementById('game-over').classList.remove('show');
-  state.processing = false;
-  renderBoard();
-  updateHUD();
+  G.processing = false;
+  renderBoard(); updateHUD();
 }
 
-// ── SHOP ──
+// ════════════════════════════════════════
+//  SHOP
+// ════════════════════════════════════════
 function buyCoins(amount, price) {
-  if (confirm(`Buy ${amount} coins for ${price}?\n(Demo: coins added for free)`)) {
-    state.coins += amount;
-    document.getElementById('shop-coins').textContent = state.coins;
-    alert(`✅ ${amount} coins added!`);
+  if (confirm(`Buy ${amount.toLocaleString()} coins for ${price}?\n(Demo mode: coins added instantly)`)) {
+    G.coins += amount;
+    document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
+    document.getElementById('menu-coins').textContent = G.coins.toLocaleString();
+    showToast(`✅ +${amount} coins added!`);
   }
 }
-
 function buyLives() {
-  if (state.coins < 50) { alert('Not enough coins!'); return; }
-  state.coins -= 50;
-  state.lives = Math.min(state.lives + 3, 8);
-  document.getElementById('shop-coins').textContent = state.coins;
-  alert('✅ +3 lives added!');
+  if (G.coins < 50) { showToast('❌ Not enough coins!'); return; }
+  G.coins -= 50;
+  G.lives = Math.min(G.lives+3, 8);
+  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
+  showToast('✅ +3 lives added!');
 }
-
 function buyBooster(type) {
-  const costs = { hammer: 20, rocket: 30, bomb: 40 };
-  const cost = costs[type];
-  if (state.coins < cost) { alert('Not enough coins!'); return; }
-  state.coins -= cost;
-  document.getElementById('shop-coins').textContent = state.coins;
-  alert(`✅ ${type.charAt(0).toUpperCase()+type.slice(1)} booster added!`);
+  const costs = { hammer:20, rocket:30, bomb:40 };
+  if (G.coins < costs[type]) { showToast('❌ Not enough coins!'); return; }
+  G.coins -= costs[type];
+  document.getElementById('shop-coins').textContent = G.coins.toLocaleString();
+  showToast(`✅ ${type.charAt(0).toUpperCase()+type.slice(1)} booster ready!`);
 }
 
-// ── LEADERBOARD ──
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `
+    position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#3a2278,#1e1060);
+    border:1.5px solid rgba(150,100,255,0.4);
+    color:#fff; padding:12px 24px; border-radius:50px;
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:15px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+    z-index:300; animation:toastIn 0.3s ease;
+    white-space:nowrap;
+  `;
+  t.textContent = msg;
+  document.head.insertAdjacentHTML('beforeend',`<style>@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}</style>`);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ════════════════════════════════════════
+//  LEADERBOARD
+// ════════════════════════════════════════
 function renderLeaderboard() {
-  leaderboard.sort((a, b) => b.score - a.score);
-  const medals = ['🥇', '🥈', '🥉'];
-  document.getElementById('lb-list').innerHTML = leaderboard.map((p, i) => `
-    <div class="lb-row" style="${p.name === '👤 You' ? 'background:#4a2fa3;' : ''}">
+  leaderboard.sort((a,b) => b.score - a.score);
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('lb-list').innerHTML = leaderboard.map((p,i) => `
+    <div class="lb-row${p.name==='👤 You'?' you':''}">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
       <div class="lb-name">${p.name}</div>
       <div class="lb-score">${p.score.toLocaleString()}</div>
@@ -612,25 +1111,34 @@ function renderLeaderboard() {
   `).join('');
 }
 
-// ── CONFETTI ──
+// ════════════════════════════════════════
+//  CONFETTI
+// ════════════════════════════════════════
 function spawnConfetti() {
-  const colors = ['#F7DC6F','#ef5350','#42a5f5','#66bb6a','#ab47bc','#ff7043'];
-  for (let i = 0; i < 60; i++) {
+  const colors = ['#FFE566','#FF6B6B','#60A5FA','#6EE7B7','#C084FC','#FFA500','#FF69B4','#00E5FF'];
+  for (let i = 0; i < 80; i++) {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
-    el.style.left = Math.random() * 100 + 'vw';
-    el.style.background = colors[Math.floor(Math.random() * colors.length)];
-    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
-    el.style.animationDelay = (Math.random() * 0.5) + 's';
-    el.style.width = el.style.height = (8 + Math.random() * 8) + 'px';
+    const size = 6 + Math.random()*10;
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      width:${size}px; height:${size * (0.4+Math.random()*0.6)}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2.5}s;
+      animation-delay:${Math.random()*0.8}s;
+      top:-20px;
+    `;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 4000);
+    setTimeout(() => el.remove(), 4500);
   }
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── INIT ──
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
 updateMenuUI();
 </script>
 </body>
