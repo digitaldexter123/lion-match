@@ -1,10 +1,6 @@
 [build]
-  command = "npm install && npx expo export --platform web"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "18"
-  NODE_OPTIONS = "--max_old_space_size=4096"
+  command = "echo 'Static site - no build needed'"
+  publish = "web"
 
 [[redirects]]
   from = "/*"

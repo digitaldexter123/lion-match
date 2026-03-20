@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🦁 Lion Match</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #1a0a4e;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; width: 100%; max-width: 420px; padding: 16px; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    /* ── MENU ── */
+    .menu-card {
+      background: #2d1b69;
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      margin-top: 24px;
+    }
+    .lion-logo { font-size: 80px; margin-bottom: 8px; }
+    .game-title { font-size: 38px; font-weight: 900; color: #F7DC6F; letter-spacing: 2px; }
+    .game-subtitle { font-size: 15px; color: #b39ddb; margin-top: 4px; }
+    .game-tagline { font-size: 13px; color: #777; margin: 8px 0 24px; font-style: italic; }
+    .btn { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; transition: transform 0.1s, opacity 0.1s; width: 100%; margin-bottom: 12px; }
+    .btn:active { transform: scale(0.96); opacity: 0.9; }
+    .btn-play { background: #F7DC6F; color: #1a0a4e; font-size: 22px; padding: 16px; letter-spacing: 3px; }
+    .btn-shop { background: #3d2b8a; color: #F7DC6F; font-size: 16px; padding: 12px; }
+    .btn-leaderboard { background: #1e1060; color: #b39ddb; font-size: 14px; padding: 10px; }
+    .lives-row { display: flex; justify-content: center; gap: 6px; margin: 12px 0 4px; font-size: 22px; }
+    .version-text { font-size: 11px; color: #555; margin-top: 8px; }
+
+    /* ── GAME ── */
+    #game-screen { padding: 8px; }
+    .hud {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; max-width: 420px; padding: 8px 12px; margin-bottom: 4px;
+    }
+    .hud-box { text-align: center; min-width: 80px; }
+    .hud-label { font-size: 10px; color: #7c6ba8; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .hud-value { font-size: 26px; font-weight: 900; color: #F7DC6F; line-height: 1; }
+    .hud-value.danger { color: #ef5350; }
+    .hud-lion { font-size: 44px; cursor: pointer; }
+
+    .board-wrap {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 4px;
+      display: inline-block;
+    }
+    .board { display: grid; gap: 3px; }
+    .tile {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      position: relative;
+      border: 2px solid transparent;
+      user-select: none;
+    }
+    .tile:hover { transform: scale(1.08); }
+    .tile.selected {
+      border-color: #F7DC6F;
+      transform: scale(1.12);
+      box-shadow: 0 0 12px #F7DC6F88;
+    }
+    .tile.exploding { animation: pop 0.25s ease-out forwards; }
+    @keyframes pop {
+      0% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    .tile.falling { animation: fall 0.18s ease-in; }
+    @keyframes fall {
+      from { transform: translateY(-20px); opacity: 0.6; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .bottom-bar { margin-top: 10px; text-align: center; width: 100%; max-width: 420px; padding: 0 12px; }
+    .hint-text { color: #b39ddb; font-size: 14px; margin-bottom: 6px; }
+    .coins-bar { color: #F7DC6F; font-size: 16px; font-weight: 700; }
+
+    .game-over-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+    }
+    .game-over-overlay.show { display: flex; }
+    .game-over-card {
+      background: #2d1b69; border-radius: 24px; padding: 32px 24px;
+      width: 90%; max-width: 360px; text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(60px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .game-over-title { font-size: 32px; font-weight: 900; color: #F7DC6F; margin-bottom: 8px; }
+    .game-over-score { font-size: 20px; color: #b39ddb; margin-bottom: 20px; }
+    .stars { font-size: 36px; margin-bottom: 16px; }
+    .btn-retry { background: #ef5350; color: #fff; font-size: 18px; padding: 14px; }
+    .btn-coins-move { background: #F7DC6F; color: #1a0a4e; font-size: 15px; padding: 12px; }
+
+    /* ── SHOP ── */
+    .shop-card { background: #2d1b69; border-radius: 24px; padding: 24px; width: 100%; margin-top: 16px; }
+    .shop-title { font-size: 28px; font-weight: 900; color: #F7DC6F; margin-bottom: 4px; text-align: center; }
+    .coins-display { color: #b39ddb; font-size: 16px; margin-bottom: 20px; text-align: center; }
+    .shop-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #3d2b8a; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+      cursor: pointer; transition: transform 0.1s;
+    }
+    .shop-item:hover { transform: scale(1.02); }
+    .shop-item-label { font-size: 16px; font-weight: 600; }
+    .shop-item-price { font-size: 16px; color: #F7DC6F; font-weight: 700; }
+    .btn-back { background: transparent; color: #b39ddb; font-size: 16px; padding: 12px; border: 1px solid #3d2b8a; margin-top: 8px; }
+
+    /* ── LEADERBOARD ── */
+    .lb-card { background: #2d1b69; border-radius: 24px; padding: 24px; width: 100%; margin-top: 16px; }
+    .lb-title { font-size: 24px; font-weight: 900; color: #F7DC6F; margin-bottom: 16px; text-align: center; }
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: 12px; margin-bottom: 8px;
+      background: #3d2b8a;
+    }
+    .lb-rank { font-size: 20px; min-width: 36px; text-align: center; }
+    .lb-name { flex: 1; font-size: 15px; font-weight: 600; }
+    .lb-score { font-size: 15px; color: #F7DC6F; font-weight: 700; }
+
+    /* ── CONFETTI ── */
+    .confetti-piece {
+      position: fixed;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+      pointer-events: none;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    @media (max-width: 380px) {
+      .tile { width: 38px; height: 38px; font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="menu-screen" class="screen active">
+  <div class="menu-card">
+    <div class="lion-logo">🦁</div>
+    <div class="game-title">Lion Match</div>
+    <div class="game-subtitle">Match-3 Puzzle Adventure</div>
+    <div class="game-tagline">Swipe gems. Beat levels. Roar!</div>
+    <button class="btn btn-play" onclick="startGame()">▶ PLAY</button>
+    <button class="btn btn-shop" onclick="showScreen('shop-screen')">🪙 Shop — <span id="menu-coins">100</span> Coins</button>
+    <button class="btn btn-leaderboard" onclick="showScreen('lb-screen')">🏆 Leaderboard</button>
+    <div class="lives-row" id="lives-display"></div>
+    <div class="version-text">Level <span id="menu-level">1</span> • Free to Play • No Ads</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div class="hud">
+    <div class="hud-box">
+      <div class="hud-label">SCORE</div>
+      <div class="hud-value" id="hud-score">0</div>
+    </div>
+    <div class="hud-lion" onclick="showScreen('menu-screen')">🦁</div>
+    <div class="hud-box">
+      <div class="hud-label">MOVES</div>
+      <div class="hud-value" id="hud-moves">20</div>
+    </div>
+  </div>
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+  <div class="bottom-bar">
+    <div class="hint-text" id="hint-text">Tap a gem to select it</div>
+    <div class="coins-bar">🪙 <span id="game-coins">100</span> coins</div>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div id="shop-screen" class="screen">
+  <div class="shop-card">
+    <div class="shop-title">🪙 Shop</div>
+    <div class="coins-display">Your Coins: <span id="shop-coins">100</span></div>
+    <div class="shop-item" onclick="buyCoins(100,'$0.99')">
+      <span class="shop-item-label">🪙 100 Coins</span>
+      <span class="shop-item-price">$0.99</span>
+    </div>
+    <div class="shop-item" onclick="buyCoins(500,'$2.99')">
+      <span class="shop-item-label">🪙 500 Coins</span>
+      <span class="shop-item-price">$2.99</span>
+    </div>
+    <div class="shop-item" onclick="buyCoins(1200,'$9.99')">
+      <span class="shop-item-label">🪙 1,200 Coins <span style="font-size:11px;color:#F7DC6F;background:#1a0a4e;padding:2px 6px;border-radius:8px;margin-left:6px">POPULAR</span></span>
+      <span class="shop-item-price">$9.99</span>
+    </div>
+    <div class="shop-item" onclick="buyCoins(2500,'$19.99')">
+      <span class="shop-item-label">🪙 2,500 Coins</span>
+      <span class="shop-item-price">$19.99</span>
+    </div>
+    <div class="shop-item" onclick="buyLives()">
+      <span class="shop-item-label">❤️ +3 Lives</span>
+      <span class="shop-item-price">50 🪙</span>
+    </div>
+    <div class="shop-item" onclick="buyBooster('hammer')">
+      <span class="shop-item-label">🔨 Hammer (remove 1 tile)</span>
+      <span class="shop-item-price">20 🪙</span>
+    </div>
+    <div class="shop-item" onclick="buyBooster('rocket')">
+      <span class="shop-item-label">🚀 Rocket (clear row)</span>
+      <span class="shop-item-price">30 🪙</span>
+    </div>
+    <div class="shop-item" onclick="buyBooster('bomb')">
+      <span class="shop-item-label">💣 Bomb (3×3 area)</span>
+      <span class="shop-item-price">40 🪙</span>
+    </div>
+    <button class="btn btn-back" onclick="showScreen('menu-screen')">← Back to Menu</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div id="lb-screen" class="screen">
+  <div class="lb-card">
+    <div class="lb-title">🏆 Leaderboard</div>
+    <div id="lb-list"></div>
+    <button class="btn btn-back" onclick="showScreen('menu-screen')" style="margin-top:16px">← Back</button>
+  </div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div class="game-over-overlay" id="game-over">
+  <div class="game-over-card">
+    <div class="stars" id="go-stars">⭐⭐⭐</div>
+    <div class="game-over-title" id="go-title">Level Complete!</div>
+    <div class="game-over-score" id="go-score">Score: 0</div>
+    <button class="btn btn-retry" id="go-btn" onclick="retryGame()" style="margin-bottom:10px">🔄 Try Again</button>
+    <button class="btn btn-coins-move" id="go-moves-btn" onclick="buyExtraMoves()" style="display:none">🪙 +5 Moves (50 coins)</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+const GRID = 8;
+const GEMS = [
+  { emoji: '🔴', color: '#E53935', name: 'ruby' },
+  { emoji: '🔵', color: '#1E88E5', name: 'sapphire' },
+  { emoji: '🟢', color: '#43A047', name: 'emerald' },
+  { emoji: '🟡', color: '#FDD835', name: 'topaz' },
+  { emoji: '🟣', color: '#8E24AA', name: 'amethyst' },
+  { emoji: '⚪', color: '#90A4AE', name: 'diamond' },
+];
+
+let state = {
+  board: [],
+  score: 0,
+  moves: 20,
+  selected: null,
+  coins: 100,
+  lives: 5,
+  level: 1,
+  processing: false,
+};
+
+let leaderboard = [
+  { name: '🦁 LionKing99', score: 48200 },
+  { name: '🐯 TigerPaw', score: 41500 },
+  { name: '🐺 WolfMatch', score: 38900 },
+  { name: '🦊 FoxPuzzle', score: 31200 },
+  { name: '🐻 BearGems', score: 27800 },
+  { name: '👤 You', score: 0 },
+];
+
+// ══════════════════════════════════════════════
+//  BOARD LOGIC
+// ══════════════════════════════════════════════
+let tileId = 0;
+
+function randomGem(numGems = 6) {
+  return Math.floor(Math.random() * numGems);
+}
+
+function createBoard() {
+  const b = [];
+  for (let r = 0; r < GRID; r++) {
+    b[r] = [];
+    for (let c = 0; c < GRID; c++) {
+      let g = randomGem();
+      while (
+        (c >= 2 && b[r][c-1]?.gem === g && b[r][c-2]?.gem === g) ||
+        (r >= 2 && b[r-1]?.[c]?.gem === g && b[r-2]?.[c]?.gem === g)
+      ) { g = randomGem(); }
+      b[r][c] = { gem: g, id: ++tileId };
+    }
+  }
+  return b;
+}
+
+function findMatches(board) {
+  const matched = new Set();
+  // Horizontal
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID - 2; c++) {
+      const g = board[r][c]?.gem;
+      if (g !== undefined && board[r][c+1]?.gem === g && board[r][c+2]?.gem === g) {
+        let end = c + 2;
+        while (end + 1 < GRID && board[r][end+1]?.gem === g) end++;
+        for (let k = c; k <= end; k++) matched.add(`${r},${k}`);
+      }
+    }
+  }
+  // Vertical
+  for (let c = 0; c < GRID; c++) {
+    for (let r = 0; r < GRID - 2; r++) {
+      const g = board[r][c]?.gem;
+      if (g !== undefined && board[r+1]?.[c]?.gem === g && board[r+2]?.[c]?.gem === g) {
+        let end = r + 2;
+        while (end + 1 < GRID && board[end+1]?.[c]?.gem === g) end++;
+        for (let k = r; k <= end; k++) matched.add(`${k},${c}`);
+      }
+    }
+  }
+  return matched;
+}
+
+function removeMatches(board, matched) {
+  const b = board.map(r => r.map(t => t ? {...t} : null));
+  for (const key of matched) {
+    const [r, c] = key.split(',').map(Number);
+    b[r][c] = null;
+  }
+  return b;
+}
+
+function dropTiles(board) {
+  const b = board.map(r => r.map(t => t ? {...t} : null));
+  for (let c = 0; c < GRID; c++) {
+    let empty = GRID - 1;
+    for (let r = GRID - 1; r >= 0; r--) {
+      if (b[r][c] !== null) {
+        if (r !== empty) { b[empty][c] = b[r][c]; b[r][c] = null; }
+        empty--;
+      }
+    }
+  }
+  return b;
+}
+
+function fillBoard(board) {
+  const b = board.map(r => r.map(t => t ? {...t} : null));
+  for (let r = 0; r < GRID; r++)
+    for (let c = 0; c < GRID; c++)
+      if (!b[r][c]) b[r][c] = { gem: randomGem(), id: ++tileId, isNew: true };
+  return b;
+}
+
+function calcScore(matchSize) {
+  if (matchSize >= 5) return matchSize * 80;
+  if (matchSize === 4) return matchSize * 50;
+  return matchSize * 30;
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderBoard(animateNew = false) {
+  const el = document.getElementById('board');
+  el.style.gridTemplateColumns = `repeat(${GRID}, 44px)`;
+  el.innerHTML = '';
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID; c++) {
+      const tile = state.board[r][c];
+      const div = document.createElement('div');
+      div.className = 'tile' + (state.selected?.r === r && state.selected?.c === c ? ' selected' : '');
+      if (tile) {
+        div.style.background = GEMS[tile.gem].color;
+        div.textContent = GEMS[tile.gem].emoji;
+        if (animateNew && tile.isNew) div.classList.add('falling');
+      } else {
+        div.style.background = '#111';
+        div.style.cursor = 'default';
+      }
+      div.addEventListener('click', () => handleTileClick(r, c));
+      el.appendChild(div);
+    }
+  }
+}
+
+function updateHUD() {
+  document.getElementById('hud-score').textContent = state.score;
+  const movesEl = document.getElementById('hud-moves');
+  movesEl.textContent = state.moves;
+  movesEl.className = 'hud-value' + (state.moves <= 5 ? ' danger' : '');
+  document.getElementById('hint-text').textContent =
+    state.selected ? '✨ Now tap an adjacent gem' : 'Tap a gem to select it';
+  document.getElementById('game-coins').textContent = state.coins;
+}
+
+function updateMenuUI() {
+  document.getElementById('menu-coins').textContent = state.coins;
+  document.getElementById('menu-level').textContent = state.level;
+  document.getElementById('shop-coins').textContent = state.coins;
+  const livesEl = document.getElementById('lives-display');
+  livesEl.innerHTML = Array.from({ length: 5 }, (_, i) => i < state.lives ? '❤️' : '🖤').join('');
+}
+
+// ══════════════════════════════════════════════
+//  GAME LOGIC
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'menu-screen') updateMenuUI();
+  if (id === 'lb-screen') renderLeaderboard();
+  if (id === 'shop-screen') document.getElementById('shop-coins').textContent = state.coins;
+}
+
+function startGame() {
+  if (state.lives <= 0) { alert('No lives left! Buy more in the Shop.'); return; }
+  state.board = createBoard();
+  state.score = 0;
+  state.moves = 20;
+  state.selected = null;
+  state.processing = false;
+  document.getElementById('game-over').classList.remove('show');
+  showScreen('game-screen');
+  renderBoard();
+  updateHUD();
+}
+
+function retryGame() {
+  document.getElementById('game-over').classList.remove('show');
+  state.lives = Math.max(0, state.lives - 1);
+  startGame();
+}
+
+async function handleTileClick(r, c) {
+  if (state.processing || !state.board[r][c]) return;
+
+  if (!state.selected) {
+    state.selected = { r, c };
+    renderBoard();
+    updateHUD();
+    return;
+  }
+
+  const { r: sr, c: sc } = state.selected;
+  const dr = Math.abs(sr - r), dc = Math.abs(sc - c);
+  const adjacent = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+
+  if (!adjacent) {
+    state.selected = { r, c };
+    renderBoard();
+    return;
+  }
+
+  state.selected = null;
+  state.processing = true;
+
+  // Try swap
+  const nb = state.board.map(row => [...row]);
+  [nb[sr][sc], nb[r][c]] = [nb[r][c], nb[sr][sc]];
+
+  const matches = findMatches(nb);
+  if (matches.size === 0) {
+    // Invalid move - flash and revert
+    state.processing = false;
+    renderBoard();
+    updateHUD();
+    return;
+  }
+
+  state.moves--;
+  state.board = nb;
+  await processMatches();
+}
+
+async function processMatches() {
+  let found = true;
+  while (found) {
+    const matches = findMatches(state.board);
+    if (matches.size === 0) { found = false; break; }
+
+    // Flash matched tiles
+    const boardEl = document.getElementById('board');
+    const cells = boardEl.children;
+    for (const key of matches) {
+      const [r, c] = key.split(',').map(Number);
+      cells[r * GRID + c].classList.add('exploding');
+    }
+    await sleep(220);
+
+    state.score += calcScore(matches.size);
+    state.board = removeMatches(state.board, matches);
+    state.board = dropTiles(state.board);
+    state.board = fillBoard(state.board);
+
+    renderBoard(true);
+    updateHUD();
+    await sleep(200);
+  }
+
+  state.processing = false;
+  updateHUD();
+
+  if (state.moves <= 0) showGameOver();
+}
+
+function showGameOver() {
+  const pct = state.score / 3000;
+  const stars = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.6 ? '⭐⭐' : '⭐';
+  const won = state.score >= 1500;
+
+  document.getElementById('go-stars').textContent = stars;
+  document.getElementById('go-title').textContent = won ? '🎉 Level Complete!' : '😢 Out of Moves!';
+  document.getElementById('go-score').textContent = `Score: ${state.score.toLocaleString()}`;
+  document.getElementById('go-btn').textContent = won ? '▶ Next Level' : '🔄 Try Again';
+  document.getElementById('go-btn').onclick = won ? nextLevel : retryGame;
+  document.getElementById('go-moves-btn').style.display = won ? 'none' : '';
+
+  if (won) {
+    // Update leaderboard
+    leaderboard.find(l => l.name === '👤 You').score = Math.max(
+      leaderboard.find(l => l.name === '👤 You').score, state.score
+    );
+    spawnConfetti();
+  }
+
+  document.getElementById('game-over').classList.add('show');
+}
+
+function nextLevel() {
+  state.level++;
+  state.moves = 20 + Math.floor(state.level / 5) * 2;
+  document.getElementById('game-over').classList.remove('show');
+  state.board = createBoard();
+  state.score = 0;
+  state.selected = null;
+  state.processing = false;
+  renderBoard();
+  updateHUD();
+}
+
+function buyExtraMoves() {
+  if (state.coins < 50) { alert('Not enough coins! Visit the Shop.'); return; }
+  state.coins -= 50;
+  state.moves += 5;
+  document.getElementById('game-over').classList.remove('show');
+  state.processing = false;
+  renderBoard();
+  updateHUD();
+}
+
+// ── SHOP ──
+function buyCoins(amount, price) {
+  if (confirm(`Buy ${amount} coins for ${price}?\n(Demo: coins added for free)`)) {
+    state.coins += amount;
+    document.getElementById('shop-coins').textContent = state.coins;
+    alert(`✅ ${amount} coins added!`);
+  }
+}
+
+function buyLives() {
+  if (state.coins < 50) { alert('Not enough coins!'); return; }
+  state.coins -= 50;
+  state.lives = Math.min(state.lives + 3, 8);
+  document.getElementById('shop-coins').textContent = state.coins;
+  alert('✅ +3 lives added!');
+}
+
+function buyBooster(type) {
+  const costs = { hammer: 20, rocket: 30, bomb: 40 };
+  const cost = costs[type];
+  if (state.coins < cost) { alert('Not enough coins!'); return; }
+  state.coins -= cost;
+  document.getElementById('shop-coins').textContent = state.coins;
+  alert(`✅ ${type.charAt(0).toUpperCase()+type.slice(1)} booster added!`);
+}
+
+// ── LEADERBOARD ──
+function renderLeaderboard() {
+  leaderboard.sort((a, b) => b.score - a.score);
+  const medals = ['🥇', '🥈', '🥉'];
+  document.getElementById('lb-list').innerHTML = leaderboard.map((p, i) => `
+    <div class="lb-row" style="${p.name === '👤 You' ? 'background:#4a2fa3;' : ''}">
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div class="lb-name">${p.name}</div>
+      <div class="lb-score">${p.score.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+// ── CONFETTI ──
+function spawnConfetti() {
+  const colors = ['#F7DC6F','#ef5350','#42a5f5','#66bb6a','#ab47bc','#ff7043'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    el.style.width = el.style.height = (8 + Math.random() * 8) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── INIT ──
+updateMenuUI();
+</script>
+</body>
+</html>
