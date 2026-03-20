@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Royal Match Clone",
-    "slug": "royal-match-clone",
+    "name": "Lion Match",
+    "slug": "lion-match",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -14,20 +14,18 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.example.royalmatchclone"
+      "bundleIdentifier": "com.lionmatch.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1a0a4e"
       },
-      "package": "com.example.royalmatchclone"
+      "package": "com.lionmatch.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "react-native-reanimated"
-    ]
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    }
   }
 }
