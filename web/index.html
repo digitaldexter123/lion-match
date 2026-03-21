@@ -696,15 +696,10 @@ function updateGoals(){
     if(isDone)done++;
     return`<div class="gl-chip${isDone?' done':''}"><span>${o.icon}</span>${isDone?'✓':progress+'/'+o.target}</div>`;
   }).join('');
-  const bar=document.getElementById('goal-bar');
-  bar.style.setProperty('--prog',(done/total*100)+'%');
-  bar.style.cssText+=``;// trigger repaint
-  document.getElementById('goal-bar').querySelector('::after')?.;// css var drives it
-  // Actually set it directly
-  const existing=document.getElementById('goal-progress-style')||document.createElement('style');
-  existing.id='goal-progress-style';
-  existing.textContent=`#goal-bar::after{width:${done/total*100}%}`;
-  document.head.appendChild(existing);
+  // Update progress bar width via injected style
+  let progressStyle=document.getElementById('gp-style');
+  if(!progressStyle){progressStyle=document.createElement('style');progressStyle.id='gp-style';document.head.appendChild(progressStyle);}
+  progressStyle.textContent=`#goal-bar::after{width:${done/total*100}%}`;
 }
 
 function menuUI(){
